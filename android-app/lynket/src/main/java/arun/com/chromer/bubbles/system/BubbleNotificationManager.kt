@@ -47,7 +47,11 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val BUBBLE_NOTIFICATION_CHANNEL_ID = "BUBBLE_NOTIFICATION_CHANNEL_ID"
+// NOTE: A NotificationChannel's bubble setting is locked at creation time and cannot be
+// changed afterwards. Bumping this id forces a fresh channel created *with*
+// setAllowBubbles(true), so installs that already had the old (bubble-disabled) channel
+// start bubbling. Bump the suffix again if the channel config ever needs to change.
+private const val BUBBLE_NOTIFICATION_CHANNEL_ID = "BUBBLE_NOTIFICATION_CHANNEL_ID_v2"
 private const val BUBBLE_NOTIFICATION_GROUP = "bubbles"
 
 @Singleton
@@ -190,6 +194,11 @@ constructor(
       setOngoing(false) // TODO Register a broadcast receiver and call notificationManager.cancel
       setSmallIcon(Icon.createWithResource(context, R.drawable.ic_chromer_notification))
       setLargeIcon(bubbleIcon)
+
+      // Fallback when the bubble can't be shown (bubbles disabled for the app/channel):
+      // the notification degrades gracefully and tapping it opens the page instead of
+      // doing nothing.
+      setContentIntent(bubbleIntent)
 
       // Associating the notification with the published shortcut is what makes it a
       // valid conversation/bubble on Android 11+.
