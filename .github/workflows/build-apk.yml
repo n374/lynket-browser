@@ -54,7 +54,12 @@ jobs:
           sed -i 's|^  configureSigning()|  // configureSigning() disabled in CI (no signing keys for local publish)|' \
             build-logic/src/main/kotlin/publish/PublishingLibrary.kt
           chmod +x gradlew
-          ./gradlew --no-daemon --stacktrace \
+          # 关键：base-android 的 version 仅在带 -Psnapshot 时才取 "master-SNAPSHOT"
+          # （见 base-android build-logic/.../publish/PublishingCommon.kt 中
+          #  `version = if (hasProperty("snapshot")) "master-SNAPSHOT" else versions[name]`）。
+          # 不带 -Psnapshot 会发布成具体版本号，与 lynket 依赖的
+          # dev.arunkumar.android:*:master-SNAPSHOT 对不上，导致 assembleDebug 解析失败。
+          ./gradlew --no-daemon --stacktrace -Psnapshot \
             :common:publishToMavenLocal \
             :dagger-base:publishToMavenLocal \
             :logging:publishToMavenLocal \
