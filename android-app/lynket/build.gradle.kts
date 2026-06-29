@@ -271,6 +271,13 @@ kapt {
     javacOptions {
         option("-Xmaxerrs", 500)
     }
+    // Hilt/Dagger coexistence during the in-progress Dagger->Hilt migration (PR176 Phase 1.x):
+    // legacy Dagger @Module classes (AppModule, ActivityModule, ...) are wired into the legacy
+    // @Component graph and intentionally have no @InstallIn. @HiltAndroidApp makes Hilt's processor
+    // scan them and fail; disabling this check lets the two DI systems coexist until migration completes.
+    arguments {
+        arg("dagger.hilt.disableModulesHaveInstallInCheck", "true")
+    }
 }
 
 // Exclude payments package from compilation (uses deprecated In-App Billing API)
