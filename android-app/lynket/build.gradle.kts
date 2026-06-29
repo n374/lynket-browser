@@ -280,12 +280,29 @@ kapt {
     }
 }
 
-// Exclude payments package from compilation (uses deprecated In-App Billing API)
+// Sources excluded from compilation.
+//  - payments/**: deprecated In-App Billing API.
+//  - PR176's unfinished modern Compose UI (Phase 3): the `arun.com.chromer.ui.*` Compose screens,
+//    MainActivity, the Modern* ViewModels/Repository and the DataStore-based prefs do not compile
+//    (missing kotlinx-coroutines-rx2 adapters, nav receiver mismatches, type-inference gaps).
+//    They are NOT used by the legacy browsing path (legacy code references them only in comments),
+//    which is what the jandan CCT fix targets. The launcher is restored to legacy HomeActivity in
+//    the manifest. Remove these excludes once the modern UI is completed.
+//    NOTE: modern UI package is `chromer/ui/**`; legacy `chromer/tabs/ui/**` must stay compiled.
+val excludedSources = listOf(
+    "**/payments/**",
+    "**/chromer/ui/**",
+    "**/MainActivity.kt",
+    "**/Modern*.kt",
+    "**/di/hilt/DataStoreModule.kt",
+    "**/data/preferences/UserPreferencesRepository.kt"
+)
+
 tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.add("-Xlint:-path")
-    exclude("**/payments/**")
+    excludedSources.forEach { exclude(it) }
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    exclude("**/payments/**")
+    excludedSources.forEach { exclude(it) }
 }
