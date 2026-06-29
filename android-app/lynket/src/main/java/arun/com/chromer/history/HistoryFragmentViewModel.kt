@@ -25,7 +25,6 @@ import androidx.lifecycle.ViewModel
 import arun.com.chromer.data.history.HistoryRepository
 import arun.com.chromer.data.website.model.Website
 import arun.com.chromer.util.RxSchedulerUtils
-import dagger.hilt.android.lifecycle.HiltViewModel
 import rx.Observable
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
@@ -40,7 +39,6 @@ import javax.inject.Inject
  *
  * Note: Modern Compose UI uses ModernHistoryViewModel instead.
  */
-@HiltViewModel
 class HistoryFragmentViewModel
 @Inject
 constructor(

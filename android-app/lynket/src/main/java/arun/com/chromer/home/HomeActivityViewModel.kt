@@ -36,7 +36,6 @@ import arun.com.chromer.settings.RxPreferences
 import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.glide.appicon.ApplicationIcon
 import com.jakewharton.rxrelay2.PublishRelay
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.arunkumar.android.rxschedulers.SchedulerProvider
 import dev.arunkumar.android.rxschedulers.asResource
@@ -56,7 +55,6 @@ import javax.inject.Inject
  * Note: Modern Compose UI uses ModernHomeViewModel instead.
  */
 @SuppressLint("CheckResource")
-@HiltViewModel
 class HomeActivityViewModel
 @Inject
 constructor(

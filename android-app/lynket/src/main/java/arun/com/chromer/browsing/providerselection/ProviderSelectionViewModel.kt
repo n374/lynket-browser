@@ -25,7 +25,6 @@ import androidx.lifecycle.ViewModel
 import arun.com.chromer.data.apps.AppRepository
 import arun.com.chromer.data.apps.model.Provider
 import arun.com.chromer.util.RxSchedulerUtils
-import dagger.hilt.android.lifecycle.HiltViewModel
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
 import timber.log.Timber
@@ -39,7 +38,6 @@ import javax.inject.Inject
  *
  * Note: Modern Compose UI uses ModernProviderSelectionViewModel instead.
  */
-@HiltViewModel
 class ProviderSelectionViewModel
 @Inject
 constructor(

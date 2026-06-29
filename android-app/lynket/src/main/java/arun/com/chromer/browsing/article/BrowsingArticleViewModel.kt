@@ -28,7 +28,6 @@ import arun.com.chromer.data.webarticle.model.WebArticle
 import arun.com.chromer.search.provider.SearchProvider
 import arun.com.chromer.search.provider.SearchProviders
 import arun.com.chromer.util.RxSchedulerUtils
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.Observable
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
@@ -40,7 +39,6 @@ import javax.inject.Inject
  * Migrated to Hilt: Uses @HiltViewModel annotation for automatic ViewModel injection.
  * Retains RxJava 1.x and 2.x for now (will be migrated to Flows in future phase).
  */
-@HiltViewModel
 class BrowsingArticleViewModel
 @Inject
 constructor(

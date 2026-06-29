@@ -25,7 +25,6 @@ import androidx.lifecycle.ViewModel
 import arun.com.chromer.data.apps.AppRepository
 import arun.com.chromer.data.common.App
 import arun.com.chromer.util.RxSchedulerUtils
-import dagger.hilt.android.lifecycle.HiltViewModel
 import rx.android.schedulers.AndroidSchedulers
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
@@ -40,7 +39,6 @@ import javax.inject.Inject
  *
  * Manages per-app settings for blacklist and incognito mode.
  */
-@HiltViewModel
 class PerAppSettingsViewModel
 @Inject
 constructor(private val appRepository: AppRepository) : ViewModel() {

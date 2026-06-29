@@ -36,7 +36,6 @@ import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.RxSchedulerUtils
 import arun.com.chromer.util.Utils
 import arun.com.chromer.util.compat.TaskDescriptionCompat
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import rx.Observable
 import rx.subjects.PublishSubject
@@ -51,7 +50,6 @@ import javax.inject.Inject
  * Retains RxJava 1.x for now (will be migrated to Flows in future phase).
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-@HiltViewModel
 class BrowsingViewModel
 @Inject
 constructor(

@@ -25,7 +25,6 @@ import androidx.lifecycle.ViewModel
 import arun.com.chromer.data.Result
 import arun.com.chromer.data.history.HistoryRepository
 import arun.com.chromer.data.website.model.Website
-import dagger.hilt.android.lifecycle.HiltViewModel
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
 import javax.inject.Inject
@@ -39,7 +38,6 @@ import javax.inject.Inject
  * Note: Modern Compose UI uses ModernHomeViewModel instead.
  * Most functionality is commented out but retained for backward compatibility.
  */
-@HiltViewModel
 class HomeFragmentViewModel
 @Inject
 constructor(

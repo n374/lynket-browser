@@ -24,7 +24,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import arun.com.chromer.data.website.WebsiteRepository
 import arun.com.chromer.tabs.TabsManager
-import dagger.hilt.android.lifecycle.HiltViewModel
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import rx.subjects.PublishSubject
@@ -40,7 +39,6 @@ import javax.inject.Inject
  *
  * Note: Modern Compose UI uses ModernTabsViewModel instead.
  */
-@HiltViewModel
 class TabsViewModel
 @Inject
 constructor(
