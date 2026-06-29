@@ -36,8 +36,6 @@ import arun.com.chromer.shared.base.activity.BaseActivity
 import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.util.RxEventBus
 import arun.com.chromer.util.Utils
-import dev.arunkumar.android.dagger.viewmodel.UsesViewModel
-import dev.arunkumar.android.dagger.viewmodel.viewModel
 import javax.inject.Inject
 
 const val EXTRA_CURRENT_LOADING_URL = "EXTRA_CURRENT_LOADING_URL"
@@ -45,7 +43,7 @@ const val EXTRA_CURRENT_LOADING_URL = "EXTRA_CURRENT_LOADING_URL"
 /**
  * Class definition for activity that shows a webpage.
  */
-abstract class BrowsingActivity : BaseActivity(), UsesViewModel {
+abstract class BrowsingActivity : BaseActivity() {
   @Inject
   lateinit var rxEventBus: RxEventBus
 
@@ -53,9 +51,11 @@ abstract class BrowsingActivity : BaseActivity(), UsesViewModel {
   lateinit var preferences: Preferences
 
   @Inject
-  override lateinit var viewModelFactory: ViewModelProvider.Factory
+  lateinit var viewModelFactory: ViewModelProvider.Factory
 
-  protected val browsingViewModel by viewModel<BrowsingViewModel>()
+  protected val browsingViewModel: BrowsingViewModel by lazy {
+    ViewModelProvider(this, viewModelFactory)[BrowsingViewModel::class.java]
+  }
 
   var website: Website? = null
   var incognito: Boolean = false
@@ -82,7 +82,7 @@ abstract class BrowsingActivity : BaseActivity(), UsesViewModel {
       .filteredEvents<TabsManager.MinimizeEvent>()
       .filter { event ->
         event.tab.url.equals(getCurrentUrl(), ignoreCase = true)
-          && event.tab.getTargetActivityName() == this::class.java.name
+            && event.tab.getTargetActivityName() == this::class.java.name
       }.subscribe {
         if (Utils.ANDROID_LOLLIPOP) {
           moveTaskToBack(true)
@@ -93,10 +93,10 @@ abstract class BrowsingActivity : BaseActivity(), UsesViewModel {
   private fun observeViewModel(savedInstanceState: Bundle?) {
     browsingViewModel.apply {
       isIncognito = incognito
-      websiteLiveData.observeUntilOnDestroy(this@BrowsingActivity) {
-        when (it) {
-          is Result.Success -> {
-            website = it.data!!
+      websiteLiveData.observeUntilOnDestroy(this@BrowsingActivity) { result ->
+        when (result) {
+          is Result.Success<*> -> {
+            website = result.data as Website
             onWebsiteLoaded(website!!)
           }
           else -> {
@@ -105,7 +105,7 @@ abstract class BrowsingActivity : BaseActivity(), UsesViewModel {
       }
 
       toolbarColor.observeUntilOnDestroy(this@BrowsingActivity) { color ->
-        onToolbarColorSet(color!!)
+        onToolbarColorSet(color)
       }
 
       if (Utils.ANDROID_LOLLIPOP) {
@@ -118,8 +118,8 @@ abstract class BrowsingActivity : BaseActivity(), UsesViewModel {
     when (savedInstanceState) {
       null -> {
         val websiteResult = Result.Success(
-          intent.getParcelableExtra(EXTRA_KEY_WEBSITE)
-            ?: Website(getCurrentUrl())
+          intent.getParcelableExtra<Website>(EXTRA_KEY_WEBSITE)
+              ?: Website(getCurrentUrl())
         )
         browsingViewModel.websiteLiveData.value = websiteResult
         browsingViewModel.toolbarColor.value = intent.getIntExtra(

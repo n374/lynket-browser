@@ -25,8 +25,6 @@ import ANDROID_DEBUG_VARIANT
 import ANDROID_MIN_SDK
 import ANDROID_RELEASE_VARIANT
 import ANDROID_TARGET_SDK
-import gradle.deps
-import gradle.version
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
@@ -87,7 +85,7 @@ internal fun Project.androidCommon() {
     }
 
     composeOptions {
-      kotlinCompilerExtensionVersion = deps.version("compose")!!
+      kotlinCompilerExtensionVersion = "1.5.4"
     }
 
     packagingOptions {

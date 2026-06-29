@@ -21,30 +21,41 @@
 package arun.com.chromer.intro.fragments
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import arun.com.chromer.R
+import arun.com.chromer.databinding.FragmentTextIntroBinding
 import arun.com.chromer.di.fragment.FragmentComponent
 import arun.com.chromer.shared.base.fragment.BaseFragment
 import arun.com.chromer.util.glide.GlideApp
 import com.github.paolorotolo.appintro.ISlideBackgroundColorHolder
-import kotlinx.android.synthetic.main.fragment_text_intro.*
 
 open class AppIntroFragment : BaseFragment(), ISlideBackgroundColorHolder {
 
+  private var _binding: FragmentTextIntroBinding? = null
+  protected val binding get() = _binding!!
+
   override fun getDefaultBackgroundColor(): Int =
-    ContextCompat.getColor(context!!, R.color.tutorialBackgrounColor)
+    ContextCompat.getColor(requireContext(), R.color.tutorialBackgrounColor)
 
   override fun setBackgroundColor(backgroundColor: Int) {
-    if (root != null) {
-      root.setBackgroundColor(backgroundColor)
-    }
+    _binding?.root?.setBackgroundColor(backgroundColor)
   }
 
   override fun inject(fragmentComponent: FragmentComponent) = fragmentComponent.inject(this)
 
   override val layoutRes: Int get() = R.layout.fragment_text_intro
+
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ) = FragmentTextIntroBinding.inflate(inflater, container, false).also {
+    _binding = it
+  }.root
 
   private var drawable: Int = 0
   private var bgColor: Int = 0
@@ -69,19 +80,24 @@ open class AppIntroFragment : BaseFragment(), ISlideBackgroundColorHolder {
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-    root.setBackgroundColor(this.bgColor)
-    titleTv.text = this.title
+    binding.root.setBackgroundColor(this.bgColor)
+    binding.titleTv.text = this.title
     if (this.titleColor != 0) {
-      titleTv!!.setTextColor(this.titleColor)
+      binding.titleTv.setTextColor(this.titleColor)
     }
 
-    descriptionTv.text = this.description
+    binding.descriptionTv.text = this.description
     if (this.descColor != 0) {
-      descriptionTv!!.setTextColor(this.descColor)
+      binding.descriptionTv.setTextColor(this.descColor)
     }
 
     // Use glide to load the drawable
-    GlideApp.with(this).load(drawable).into(imageView!!)
+    GlideApp.with(this).load(drawable).into(binding.imageView)
+  }
+
+  override fun onDestroyView() {
+    super.onDestroyView()
+    _binding = null
   }
 
   companion object {

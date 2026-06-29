@@ -37,7 +37,7 @@ import arun.com.chromer.R
 import arun.com.chromer.browsing.webview.EmbeddableWebViewActivity
 import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.Utils
-import dev.arunkumar.common.context.dpToPx
+import dev.arunkumar.android.common.dpToPx
 import io.reactivex.Single
 import timber.log.Timber
 import javax.inject.Inject
@@ -104,13 +104,19 @@ constructor(
     val context = bubbleData.contextRef.get() ?: application
     val website = bubbleData.website
 
+    // Bubbles require FLAG_MUTABLE on Android 12+ because they need to update the intent
+    val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+    } else {
+      PendingIntent.FLAG_UPDATE_CURRENT
+    }
     val bubbleIntent = PendingIntent.getActivity(
       context,
       website.url.hashCode(),
       Intent(context, EmbeddableWebViewActivity::class.java).apply {
         data = Uri.parse(website.url)
       },
-      PendingIntent.FLAG_UPDATE_CURRENT
+      flags
     )
 
     val bubbleIcon: Icon = bubbleData.icon
@@ -164,7 +170,7 @@ constructor(
 
 
   private fun BubbleLoadData.fallbackIcon(): Icon = if (color != Constants.NO_COLOR) {
-    val iconSize = application.dpToPx(108.0)
+    val iconSize = 108.dpToPx()
     Icon.createWithAdaptiveBitmap(
       ColorDrawable(color).toBitmap(
         width = iconSize,

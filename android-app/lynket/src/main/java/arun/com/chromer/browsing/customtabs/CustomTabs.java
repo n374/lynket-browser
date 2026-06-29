@@ -20,6 +20,7 @@
 
 package arun.com.chromer.browsing.customtabs;
 
+import static android.app.PendingIntent.FLAG_IMMUTABLE;
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static android.graphics.Color.WHITE;
 import static arun.com.chromer.browsing.customtabs.bottombar.BottomBarManager.createBottomBarRemoteViews;
@@ -141,6 +142,17 @@ public class CustomTabs {
   public CustomTabs(@NonNull Activity activity) {
     this.activity = activity;
     noAnimation = false;
+  }
+
+  /**
+   * Helper method to get the correct PendingIntent flags for Android 12+
+   * Android 12 (API 31) requires FLAG_IMMUTABLE or FLAG_MUTABLE
+   */
+  private static int getPendingIntentFlags() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      return FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE;
+    }
+    return FLAG_UPDATE_CURRENT;
   }
 
   /**
@@ -361,7 +373,7 @@ public class CustomTabs {
         if (Utils.isPackageInstalled(activity, pakage)) {
           final Bitmap icon = getAppIconBitmap(pakage);
           final Intent intent = new Intent(activity, SecondaryBrowserReceiver.class);
-          final PendingIntent openBrowserPending = PendingIntent.getBroadcast(activity, 0, intent, FLAG_UPDATE_CURRENT);
+          final PendingIntent openBrowserPending = PendingIntent.getBroadcast(activity, 0, intent, getPendingIntentFlags());
           builder.setActionButton(icon, activity.getString(R.string.choose_secondary_browser), openBrowserPending);
         }
         break;
@@ -370,7 +382,7 @@ public class CustomTabs {
         if (Utils.isPackageInstalled(activity, pakage)) {
           final Bitmap icon = getAppIconBitmap(pakage);
           final Intent intent = new Intent(activity, FavShareBroadcastReceiver.class);
-          final PendingIntent favSharePending = PendingIntent.getBroadcast(activity, 0, intent, FLAG_UPDATE_CURRENT);
+          final PendingIntent favSharePending = PendingIntent.getBroadcast(activity, 0, intent, getPendingIntentFlags());
           builder.setActionButton(icon, activity.getString(R.string.fav_share_app), favSharePending);
         }
         break;
@@ -380,7 +392,7 @@ public class CustomTabs {
           .color(WHITE)
           .sizeDp(24).toBitmap();
         final Intent intent = new Intent(activity, ShareBroadcastReceiver.class);
-        final PendingIntent sharePending = PendingIntent.getBroadcast(activity, 0, intent, FLAG_UPDATE_CURRENT);
+        final PendingIntent sharePending = PendingIntent.getBroadcast(activity, 0, intent, getPendingIntentFlags());
         builder.setActionButton(shareIcon, activity.getString(R.string.share_via), sharePending, true);
         break;
     }
@@ -409,7 +421,7 @@ public class CustomTabs {
     final PendingIntent moreMenuPending = PendingIntent.getActivity(activity,
       0,
       moreMenuActivity,
-      FLAG_UPDATE_CURRENT);
+      getPendingIntentFlags());
     builder.addMenuItem(activity.getString(R.string.chromer_options), moreMenuPending);
   }
 
@@ -421,7 +433,7 @@ public class CustomTabs {
     if (!Preferences.get(activity).bottomBar() && Utils.ANDROID_LOLLIPOP) {
       final Intent minimizeIntent = new Intent(activity, MinimizeBroadcastReceiver.class);
       minimizeIntent.putExtra(EXTRA_KEY_ORIGINAL_URL, url);
-      final PendingIntent pendingMin = PendingIntent.getBroadcast(activity, new Random().nextInt(), minimizeIntent, FLAG_UPDATE_CURRENT);
+      final PendingIntent pendingMin = PendingIntent.getBroadcast(activity, new Random().nextInt(), minimizeIntent, getPendingIntentFlags());
       builder.addMenuItem(activity.getString(R.string.minimize), pendingMin);
     }
   }
@@ -439,7 +451,7 @@ public class CustomTabs {
           final String app = Utils.getAppNameWithPackage(activity, pkg);
           final String label = String.format(activity.getString(R.string.share_with), app);
           final Intent shareIntent = new Intent(activity, FavShareBroadcastReceiver.class);
-          final PendingIntent pendingShareIntent = PendingIntent.getBroadcast(activity, 0, shareIntent, FLAG_UPDATE_CURRENT);
+          final PendingIntent pendingShareIntent = PendingIntent.getBroadcast(activity, 0, shareIntent, getPendingIntentFlags());
           builder.addMenuItem(label, pendingShareIntent);
         }
         break;
@@ -450,7 +462,7 @@ public class CustomTabs {
             final String app = Utils.getAppNameWithPackage(activity, pkg);
             final String label = String.format(activity.getString(R.string.open_in_browser), app);
             final Intent browseIntent = new Intent(activity, SecondaryBrowserReceiver.class);
-            final PendingIntent pendingBrowseIntent = PendingIntent.getBroadcast(activity, 0, browseIntent, FLAG_UPDATE_CURRENT);
+            final PendingIntent pendingBrowseIntent = PendingIntent.getBroadcast(activity, 0, browseIntent, getPendingIntentFlags());
             builder.addMenuItem(label, pendingBrowseIntent);
           } else {
             Timber.d("Excluded secondary browser menu as it was Chrome");
@@ -463,7 +475,7 @@ public class CustomTabs {
   private void prepareCopyLink() {
     final Intent clipboardIntent = new Intent(activity, CopyToClipboardReceiver.class);
     clipboardIntent.putExtra(EXTRA_KEY_ORIGINAL_URL, url);
-    final PendingIntent serviceIntentPending = PendingIntent.getBroadcast(activity, 0, clipboardIntent, FLAG_UPDATE_CURRENT);
+    final PendingIntent serviceIntentPending = PendingIntent.getBroadcast(activity, 0, clipboardIntent, getPendingIntentFlags());
     builder.addMenuItem(activity.getString(R.string.copy_link), serviceIntentPending);
   }
 
@@ -478,7 +490,7 @@ public class CustomTabs {
         || customTabPkg.equalsIgnoreCase(STABLE_PACKAGE)) {
 
         final Intent chromeReceiver = new Intent(activity, OpenInChromeReceiver.class);
-        final PendingIntent openChromePending = PendingIntent.getBroadcast(activity, 0, chromeReceiver, FLAG_UPDATE_CURRENT);
+        final PendingIntent openChromePending = PendingIntent.getBroadcast(activity, 0, chromeReceiver, getPendingIntentFlags());
 
         final String app = Utils.getAppNameWithPackage(activity, customTabPkg);
         final String label = String.format(activity.getString(R.string.open_in_browser), app);
@@ -490,7 +502,7 @@ public class CustomTabs {
   private void prepareOpenWith() {
     final Intent openWithActivity = new Intent(activity, OpenIntentWithActivity.class);
     openWithActivity.putExtra(EXTRA_KEY_ORIGINAL_URL, url);
-    final PendingIntent openWithActivityPending = PendingIntent.getActivity(activity, 0, openWithActivity, FLAG_UPDATE_CURRENT);
+    final PendingIntent openWithActivityPending = PendingIntent.getActivity(activity, 0, openWithActivity, getPendingIntentFlags());
     builder.addMenuItem(activity.getString(R.string.open_with), openWithActivityPending);
   }
 

@@ -37,52 +37,52 @@ import androidx.recyclerview.widget.RecyclerView
 import arun.com.chromer.BuildConfig
 import arun.com.chromer.R
 import arun.com.chromer.about.changelog.Changelog
+import arun.com.chromer.databinding.FragmentAboutBinding
+import arun.com.chromer.databinding.FragmentAboutListItemTemplateBinding
 import arun.com.chromer.extenstions.gone
 import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.glide.GlideApp
-import butterknife.ButterKnife
-import butterknife.Unbinder
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.fragment_about.*
-import kotlinx.android.synthetic.main.fragment_about_list_item_template.*
 
 /**
  * Created by Arun on 11/11/2015.
  */
 class AboutFragment : Fragment() {
-  private lateinit var unBinder: Unbinder
+  private var _binding: FragmentAboutBinding? = null
+  private val binding get() = _binding!!
 
   override fun onCreateView(
     inflater: LayoutInflater,
     container: ViewGroup?,
     savedInstanceState: Bundle?
-  ): View = inflater.inflate(R.layout.fragment_about, container, false)
+  ): View {
+    _binding = FragmentAboutBinding.inflate(inflater, container, false)
+    return binding.root
+  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    unBinder = ButterKnife.bind(this, view)
     populateData()
   }
 
   override fun onDestroyView() {
     super.onDestroyView()
-    unBinder.unbind()
+    _binding = null
   }
 
   private fun populateData() {
-    about_app_version_list.apply {
+    binding.aboutAppVersionList.apply {
       isNestedScrollingEnabled = false
       layoutManager = LinearLayoutManager(context)
       adapter = AppAdapter()
     }
-    about_author_version_list.apply {
+    binding.aboutAuthorVersionList.apply {
       isNestedScrollingEnabled = false
       layoutManager = LinearLayoutManager(context)
       adapter = AuthorAdapter()
     }
-    creditsRv.apply {
+    binding.creditsRv.apply {
       isNestedScrollingEnabled = false
       layoutManager = LinearLayoutManager(context)
       adapter = CreditsAdapter()
@@ -94,8 +94,8 @@ class AboutFragment : Fragment() {
       parent: ViewGroup,
       viewType: Int
     ) = ItemHolder(
-      LayoutInflater.from(activity).inflate(
-        R.layout.fragment_about_list_item_template,
+      FragmentAboutListItemTemplateBinding.inflate(
+        LayoutInflater.from(activity),
         parent,
         false
       )
@@ -103,60 +103,60 @@ class AboutFragment : Fragment() {
 
     override fun onBindViewHolder(holder: ItemHolder, position: Int) {
       val materialDark = ContextCompat.getColor(requireActivity(), R.color.colorAccent)
-      holder.about_app_subtitle.visibility = View.VISIBLE
+      holder.itemBinding.aboutAppSubtitle.visibility = View.VISIBLE
       when (position) {
         0 -> {
-          holder.about_app_title.setText(R.string.version)
-          holder.about_app_subtitle.text = BuildConfig.VERSION_NAME
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.version)
+          holder.itemBinding.aboutAppSubtitle.text = BuildConfig.VERSION_NAME
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_information_outline)
             .color(materialDark)
             .sizeDp(24)
         }
         1 -> {
-          holder.about_app_title.setText(R.string.changelog)
-          holder.about_app_subtitle.setText(R.string.see_whats_new)
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.changelog)
+          holder.itemBinding.aboutAppSubtitle.setText(R.string.see_whats_new)
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_chart_line)
             .color(materialDark)
             .sizeDp(24)
         }
         2 -> {
-          holder.about_app_title.setText(R.string.follow_twitter)
-          holder.about_app_subtitle.visibility = View.GONE
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.follow_twitter)
+          holder.itemBinding.aboutAppSubtitle.visibility = View.GONE
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_twitter)
             .color(materialDark)
             .sizeDp(24)
         }
         3 -> {
-          holder.about_app_title.setText(R.string.discuss_on_reddit)
-          holder.about_app_subtitle.visibility = View.GONE
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.discuss_on_reddit)
+          holder.itemBinding.aboutAppSubtitle.visibility = View.GONE
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_reddit)
             .color(materialDark)
             .sizeDp(24)
         }
         4 -> {
-          holder.about_app_title.setText(R.string.licenses)
-          holder.about_app_subtitle.visibility = View.GONE
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.licenses)
+          holder.itemBinding.aboutAppSubtitle.visibility = View.GONE
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_wallet_membership)
             .color(materialDark)
             .sizeDp(24)
         }
         5 -> {
-          holder.about_app_title.setText(R.string.translations)
-          holder.about_app_subtitle.setText(R.string.help_translations)
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.translations)
+          holder.itemBinding.aboutAppSubtitle.setText(R.string.help_translations)
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_translate)
             .color(materialDark)
             .sizeDp(24)
         }
         6 -> {
-          holder.about_app_title.setText(R.string.source)
-          holder.about_app_subtitle.setText(R.string.contribute_to_chromer)
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.source)
+          holder.itemBinding.aboutAppSubtitle.setText(R.string.contribute_to_chromer)
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_source_branch)
             .color(materialDark)
             .sizeDp(24)
@@ -166,8 +166,8 @@ class AboutFragment : Fragment() {
 
     override fun getItemCount() = 6
 
-    internal inner class ItemHolder(override val containerView: View) :
-      RecyclerView.ViewHolder(containerView), LayoutContainer, View.OnClickListener {
+    internal inner class ItemHolder(val itemBinding: FragmentAboutListItemTemplateBinding) :
+      RecyclerView.ViewHolder(itemBinding.root), View.OnClickListener {
 
       init {
         itemView.setOnClickListener(this)
@@ -216,62 +216,66 @@ class AboutFragment : Fragment() {
       parent: ViewGroup,
       viewType: Int
     ): ItemHolder {
-      val view = LayoutInflater.from(activity)
-        .inflate(R.layout.fragment_about_list_item_template, parent, false)
-      return ItemHolder(view)
+      return ItemHolder(
+        FragmentAboutListItemTemplateBinding.inflate(
+          LayoutInflater.from(activity),
+          parent,
+          false
+        )
+      )
     }
 
     override fun onBindViewHolder(holder: ItemHolder, position: Int) {
       when (position) {
         0 -> {
-          holder.about_app_title.text = Constants.ME
-          holder.about_app_subtitle.text = Constants.LOCATION
-          holder.about_row_item_image.layoutParams.height =
+          holder.itemBinding.aboutAppTitle.text = Constants.ME
+          holder.itemBinding.aboutAppSubtitle.text = Constants.LOCATION
+          holder.itemBinding.aboutRowItemImage.layoutParams.height =
             resources.getDimension(R.dimen.arun_height).toInt()
-          holder.about_row_item_image.layoutParams.width =
+          holder.itemBinding.aboutRowItemImage.layoutParams.width =
             resources.getDimension(R.dimen.arun_width).toInt()
           val imageBitmap = BitmapFactory.decodeResource(resources, R.drawable.arun)
           val roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(resources, imageBitmap)
           roundedBitmapDrawable.setAntiAlias(true)
           roundedBitmapDrawable.isCircular = true
-          holder.about_row_item_image.setImageDrawable(roundedBitmapDrawable)
+          holder.itemBinding.aboutRowItemImage.setImageDrawable(roundedBitmapDrawable)
         }
         1 -> {
-          holder.about_app_title.setText(R.string.add_to_circles)
-          holder.about_app_subtitle.visibility = View.GONE
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.add_to_circles)
+          holder.itemBinding.aboutAppSubtitle.visibility = View.GONE
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_google_circles)
             .color(ContextCompat.getColor(requireActivity(), R.color.google_plus))
             .sizeDp(24)
         }
         2 -> {
-          holder.about_app_title.setText(R.string.follow_twitter)
-          holder.about_app_subtitle.visibility = View.GONE
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.follow_twitter)
+          holder.itemBinding.aboutAppSubtitle.visibility = View.GONE
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_twitter)
             .color(ContextCompat.getColor(requireActivity(), R.color.twitter))
             .sizeDp(24)
         }
         3 -> {
-          holder.about_app_title.setText(R.string.connect_linkedIn)
-          holder.about_app_subtitle.visibility = View.GONE
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.connect_linkedIn)
+          holder.itemBinding.aboutAppSubtitle.visibility = View.GONE
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_linkedin_box)
             .color(ContextCompat.getColor(requireActivity(), R.color.linkedin))
             .sizeDp(24)
         }
         4 -> {
-          holder.about_app_title.setText(R.string.fork_on_github)
-          holder.about_app_subtitle.visibility = View.GONE
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.fork_on_github)
+          holder.itemBinding.aboutAppSubtitle.visibility = View.GONE
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_github_circle)
             .color(Color.BLACK)
             .sizeDp(24)
         }
         5 -> {
-          holder.about_app_title.setText(R.string.more_apps)
-          holder.about_app_subtitle.visibility = View.GONE
-          holder.about_row_item_image.background = IconicsDrawable(requireActivity())
+          holder.itemBinding.aboutAppTitle.setText(R.string.more_apps)
+          holder.itemBinding.aboutAppSubtitle.visibility = View.GONE
+          holder.itemBinding.aboutRowItemImage.background = IconicsDrawable(requireActivity())
             .icon(CommunityMaterial.Icon.cmd_google_play)
             .color(ContextCompat.getColor(requireActivity(), R.color.play_store_green))
             .sizeDp(24)
@@ -283,8 +287,8 @@ class AboutFragment : Fragment() {
       return 6
     }
 
-    internal inner class ItemHolder(override val containerView: View) :
-      RecyclerView.ViewHolder(containerView), View.OnClickListener, LayoutContainer {
+    internal inner class ItemHolder(val itemBinding: FragmentAboutListItemTemplateBinding) :
+      RecyclerView.ViewHolder(itemBinding.root), View.OnClickListener {
 
       init {
         itemView.setOnClickListener(this)
@@ -331,12 +335,13 @@ class AboutFragment : Fragment() {
       parent: ViewGroup,
       viewType: Int
     ): ItemHolder {
-      val view = LayoutInflater.from(activity).inflate(
-        R.layout.fragment_about_list_item_template,
-        parent,
-        false
+      return ItemHolder(
+        FragmentAboutListItemTemplateBinding.inflate(
+          LayoutInflater.from(activity),
+          parent,
+          false
+        )
       )
-      return ItemHolder(view)
     }
 
     private val patryk = "Patryk"
@@ -356,20 +361,20 @@ class AboutFragment : Fragment() {
     override fun onBindViewHolder(holder: ItemHolder, position: Int) {
       when (items[position]) {
         patryk -> {
-          holder.about_app_title.text = "Patryk Goworowski"
-          holder.about_app_subtitle.setText(R.string.icon_design)
+          holder.itemBinding.aboutAppTitle.text = "Patryk Goworowski"
+          holder.itemBinding.aboutAppSubtitle.setText(R.string.icon_design)
           GlideApp.with(holder.itemView.context).load(patrykProfileImg)
-            .into(holder.about_row_item_image)
+            .into(holder.itemBinding.aboutRowItemImage)
         }
         max -> {
-          holder.about_app_title.text = "Max Patchs"
-          holder.about_app_subtitle.setText(R.string.illustrations_and_video)
-          GlideApp.with(holder.itemView.context).load(maxImg).into(holder.about_row_item_image)
+          holder.itemBinding.aboutAppTitle.text = "Max Patchs"
+          holder.itemBinding.aboutAppSubtitle.setText(R.string.illustrations_and_video)
+          GlideApp.with(holder.itemView.context).load(maxImg).into(holder.itemBinding.aboutRowItemImage)
         }
         beta -> {
-          holder.about_app_title.setText(R.string.beta_testers)
-          holder.about_app_subtitle.gone()
-          holder.about_row_item_image.setImageDrawable(
+          holder.itemBinding.aboutAppTitle.setText(R.string.beta_testers)
+          holder.itemBinding.aboutAppSubtitle.gone()
+          holder.itemBinding.aboutRowItemImage.setImageDrawable(
             IconicsDrawable(requireActivity())
               .icon(CommunityMaterial.Icon.cmd_google_plus)
               .colorRes(R.color.md_red_700)
@@ -381,8 +386,8 @@ class AboutFragment : Fragment() {
 
     override fun getItemCount() = items.size
 
-    internal inner class ItemHolder(override val containerView: View) :
-      RecyclerView.ViewHolder(containerView), LayoutContainer, View.OnClickListener {
+    internal inner class ItemHolder(val itemBinding: FragmentAboutListItemTemplateBinding) :
+      RecyclerView.ViewHolder(itemBinding.root), View.OnClickListener {
 
       init {
         itemView.setOnClickListener(this)

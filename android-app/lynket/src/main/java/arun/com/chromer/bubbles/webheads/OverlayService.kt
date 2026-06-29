@@ -24,7 +24,9 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.net.Uri
+import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.widget.Toast
@@ -50,7 +52,15 @@ abstract class OverlayService : BaseService() {
   override fun onCreate() {
     super.onCreate()
     checkForOverlayPermission()
-    startForeground(getNotificationId(), getNotification())
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      startForeground(
+        getNotificationId(),
+        getNotification(),
+        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+      )
+    } else {
+      startForeground(getNotificationId(), getNotification())
+    }
   }
 
   protected fun stopService() {

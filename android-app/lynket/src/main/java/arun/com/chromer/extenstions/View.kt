@@ -68,7 +68,7 @@ fun View.circularHideWithSelfCenter(done: (() -> Unit)? = null) {
     anim.apply {
       // make the view invisible when the animation is done
       addListener(object : AnimatorListenerAdapter() {
-        override fun onAnimationEnd(animation: Animator?) {
+        override fun onAnimationEnd(animation: Animator) {
           super.onAnimationEnd(animation)
           this@circularHideWithSelfCenter.gone()
           done?.invoke()
@@ -95,7 +95,7 @@ fun View.circularRevealWithSelfCenter(done: (() -> Unit)? = null) {
     // create the animation (the start radius is zero)
     ViewAnimationUtils.createCircularReveal(this, cx, cy, 0f, initialRadius.toFloat()).apply {
       addListener(object : AnimatorListenerAdapter() {
-        override fun onAnimationEnd(animation: Animator?) {
+        override fun onAnimationEnd(animation: Animator) {
           super.onAnimationEnd(animation)
           done?.invoke()
         }

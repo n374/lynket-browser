@@ -30,6 +30,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator
 import arun.com.chromer.R
 import arun.com.chromer.about.changelog.Changelog
 import arun.com.chromer.data.website.model.Website
+import arun.com.chromer.databinding.ActivityMainBinding
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.extenstions.gone
 import arun.com.chromer.extenstions.show
@@ -45,21 +46,19 @@ import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.tips.TipsActivity
 import arun.com.chromer.util.RxEventBus
 import com.google.android.material.snackbar.Snackbar
-import com.jakewharton.rxbinding2.view.clicks
+import com.jakewharton.rxbinding3.view.clicks
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
-import dev.arunkumar.android.dagger.viewmodel.UsesViewModel
 import dev.arunkumar.android.dagger.viewmodel.ViewModelKey
-import dev.arunkumar.android.dagger.viewmodel.viewModel
-import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @SuppressLint("CheckResult")
-class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
+class HomeActivity : BaseActivity(), Snackable {
+  private lateinit var binding: ActivityMainBinding
   @Inject
   lateinit var tabsManager: TabsManager
 
@@ -70,8 +69,11 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
   lateinit var tabsManger: TabsManager
 
   @Inject
-  override lateinit var viewModelFactory: ViewModelProvider.Factory
-  private val homeActivityViewModel by viewModel<HomeActivityViewModel>()
+  lateinit var viewModelFactory: ViewModelProvider.Factory
+
+  private val homeActivityViewModel: HomeActivityViewModel by lazy {
+    ViewModelProvider(this, viewModelFactory)[HomeActivityViewModel::class.java]
+  }
 
   override fun inject(activityComponent: ActivityComponent) = activityComponent.inject(this)
 
@@ -87,6 +89,8 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
   override fun onCreate(savedInstanceState: Bundle?) {
     setTheme(R.style.AppTheme_NoActionBar)
     super.onCreate(savedInstanceState)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    setContentView(binding.root)
 
     if (Preferences.get(this).isFirstRun) {
       startActivity(Intent(this, ChromerIntroActivity::class.java))
@@ -101,15 +105,15 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
   }
 
   override fun snack(textToSnack: String) {
-    Snackbar.make(coordinatorLayout, textToSnack, Snackbar.LENGTH_SHORT).show()
+    Snackbar.make(binding.coordinatorLayout, textToSnack, Snackbar.LENGTH_SHORT).show()
   }
 
   override fun snackLong(textToSnack: String) {
-    Snackbar.make(coordinatorLayout, textToSnack, Snackbar.LENGTH_LONG).show()
+    Snackbar.make(binding.coordinatorLayout, textToSnack, Snackbar.LENGTH_LONG).show()
   }
 
   private fun setupToolbar() {
-    tipsIcon.setImageDrawable(
+    binding.tipsIcon.setImageDrawable(
       IconicsDrawable(this)
         .icon(CommunityMaterial.Icon.cmd_lightbulb_on)
         .colorRes(R.color.md_yellow_700)
@@ -119,10 +123,10 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
 
   private fun setupEventListeners() {
     subs.add(rxEventBus.filteredEvents<TabsManager.FinishRoot>().subscribe { finish() })
-    settingsIcon.setOnClickListener {
+    binding.settingsIcon.setOnClickListener {
       startActivity(Intent(this, SettingsGroupActivity::class.java))
     }
-    tipsIcon.setOnClickListener {
+    binding.tipsIcon.setOnClickListener {
       startActivity(Intent(this, TipsActivity::class.java))
     }
   }
@@ -135,7 +139,7 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
   }
 
   private fun setupFeed() {
-    homeFeedRecyclerView.apply {
+    binding.homeFeedRecyclerView.apply {
       setController(homeFeedController)
       (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
     }
@@ -151,7 +155,7 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
   }
 
   private fun setupSearchBar() {
-    materialSearchView.apply {
+    binding.materialSearchView.apply {
       // Handle voice item failed
       voiceSearchFailed()
         .takeUntil(lifecycleEvents.destroys)
@@ -176,13 +180,13 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
         .takeUntil(lifecycleEvents.destroys)
         .subscribe { hasFocus ->
           if (hasFocus) {
-            shadowView.show()
+            binding.shadowView.show()
           } else {
-            shadowView.gone()
+            binding.shadowView.gone()
           }
         }
 
-      shadowView.clicks()
+      binding.shadowView.clicks()
         .debounce(100, TimeUnit.MILLISECONDS, schedulerProvider.ui)
         .takeUntil(lifecycleEvents.destroys)
         .subscribe { clearFocus() }
@@ -197,8 +201,8 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
   }
 
   override fun onBackPressed() {
-    if (materialSearchView.hasFocus()) {
-      materialSearchView.clearFocus()
+    if (binding.materialSearchView.hasFocus()) {
+      binding.materialSearchView.clearFocus()
       return
     }
     super.onBackPressed()
@@ -206,7 +210,7 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
-    materialSearchView.onActivityResult(requestCode, resultCode, data)
+    binding.materialSearchView.onActivityResult(requestCode, resultCode, data)
   }
 
   @Module
@@ -214,6 +218,6 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
     @Binds
     @IntoMap
     @ViewModelKey(HomeActivityViewModel::class)
-    abstract fun HomeActivityViewModel.bindHomeViewModel(): ViewModel
+    abstract fun bindHomeViewModel(viewModel: HomeActivityViewModel): ViewModel
   }
 }

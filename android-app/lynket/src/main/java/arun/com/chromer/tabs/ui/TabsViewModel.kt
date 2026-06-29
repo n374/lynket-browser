@@ -24,6 +24,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import arun.com.chromer.data.website.WebsiteRepository
 import arun.com.chromer.tabs.TabsManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import rx.subjects.PublishSubject
@@ -31,6 +32,15 @@ import rx.subscriptions.CompositeSubscription
 import timber.log.Timber
 import javax.inject.Inject
 
+/**
+ * Legacy ViewModel for Tabs UI (XML-based).
+ *
+ * Migrated to Hilt: Uses @HiltViewModel annotation for automatic ViewModel injection.
+ * Retains RxJava 1.x for now (will be migrated to Flows in future phase).
+ *
+ * Note: Modern Compose UI uses ModernTabsViewModel instead.
+ */
+@HiltViewModel
 class TabsViewModel
 @Inject
 constructor(

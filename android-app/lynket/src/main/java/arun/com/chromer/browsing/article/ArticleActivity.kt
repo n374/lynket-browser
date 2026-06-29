@@ -45,6 +45,7 @@ import arun.com.chromer.browsing.menu.MenuDelegate
 import arun.com.chromer.data.Result
 import arun.com.chromer.data.webarticle.model.WebArticle
 import arun.com.chromer.data.website.model.Website
+import arun.com.chromer.databinding.ActivityArticleModeBinding
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.extenstions.gone
 import arun.com.chromer.extenstions.show
@@ -54,17 +55,16 @@ import arun.com.chromer.settings.Preferences.*
 import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.util.ColorUtil
 import arun.com.chromer.util.Utils
-import butterknife.OnClick
 import com.afollestad.materialdialogs.MaterialDialog
 import com.bumptech.glide.RequestManager
 import com.jakewharton.rxbinding.widget.RxSeekBar
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
 import hu.akarnokd.rxjava.interop.RxJavaInterop
-import kotlinx.android.synthetic.main.activity_article_mode.*
 import javax.inject.Inject
 
 class ArticleActivity : BrowsingActivity() {
+  private lateinit var binding: ActivityArticleModeBinding
   override fun inject(activityComponent: ActivityComponent) = activityComponent.inject(this)
 
   private lateinit var browsingArticleViewModel: BrowsingArticleViewModel
@@ -108,6 +108,9 @@ class ArticleActivity : BrowsingActivity() {
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    binding = ActivityArticleModeBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+
     readCustomizations()
     url = intent.dataString
 
@@ -117,11 +120,11 @@ class ArticleActivity : BrowsingActivity() {
     setupTheme()
 
     articleScrollListener = ArticleScrollListener(
-      toolbar,
-      statusBar,
+      binding.toolbar,
+      binding.statusBar,
       primaryColor
-    ).also(recyclerView::addOnScrollListener)
-    recyclerView.addOnScrollListener(systemUiLowProfileOnScrollListener)
+    ).also(binding.recyclerView::addOnScrollListener)
+    binding.recyclerView.addOnScrollListener(systemUiLowProfileOnScrollListener)
 
     observeViewModel()
     if (savedInstanceState == null) {
@@ -160,8 +163,8 @@ class ArticleActivity : BrowsingActivity() {
     primaryColor = websiteThemeColor
     accentColor = ContextCompat.getColor(this, R.color.accent)
 
-    changeRecyclerOverscrollColors(recyclerView, primaryColor)
-    changeProgressBarColors(progressBar, primaryColor)
+    changeRecyclerOverscrollColors(binding.recyclerView, primaryColor)
+    changeProgressBarColors(binding.progressBar, primaryColor)
     articleScrollListener?.setPrimaryColor(primaryColor)
 
     if (preferences.dynamiceToolbarEnabledAndWebEnabled() && canUseAsAccentColor(primaryColor)) {
@@ -178,8 +181,8 @@ class ArticleActivity : BrowsingActivity() {
   override fun onPrepareOptionsMenu(menu: Menu) = menuDelegate.prepareOptionsMenu(menu)
 
   override fun onOptionsItemSelected(item: MenuItem) = if (item.itemId == R.id.menu_text_size) {
-    TransitionManager.beginDelayedTransition(articleBottomLinearLayout)
-    articleTextSizeCard.show()
+    TransitionManager.beginDelayedTransition(binding.articleBottomLinearLayout)
+    binding.articleTextSizeCard.show()
     true
   } else menuDelegate.handleItemSelected(item.itemId)
 
@@ -207,20 +210,20 @@ class ArticleActivity : BrowsingActivity() {
   }
 
   private fun setupToolbar() {
-    setSupportActionBar(toolbar)
+    setSupportActionBar(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     supportActionBar?.setHomeAsUpIndicator(R.drawable.article_ic_close)
     supportActionBar?.title = null
   }
 
   private fun hideLoading() {
-    progressBar.gone()
+    binding.progressBar.gone()
   }
 
   private fun setupCloseListeners() {
-    transparentSide1.setOnClickListener { finish() }
-    transparentSide2.setOnClickListener { finish() }
-    dragDismissLayout.addListener(
+    binding.transparentSide1.setOnClickListener { finish() }
+    binding.transparentSide2.setOnClickListener { finish() }
+    binding.dragDismissLayout.addListener(
       object : ElasticDragDismissFrameLayout.ElasticDragDismissCallback() {
         override fun onDragDismissed() {
           finish()
@@ -231,18 +234,19 @@ class ArticleActivity : BrowsingActivity() {
 
   private fun setupBottombar() {
     val bg = ContextCompat.getColor(this, R.color.article_windowBackground)
-    bottomNavigation.background = ColorDrawable(bg)
-    menuDelegate.setupBottombar(bottomNavigation)
+    binding.bottomNavigation.background = ColorDrawable(bg)
+    menuDelegate.setupBottombar(binding.bottomNavigation)
 
     // Text size related
-    textSizeIconView.setImageDrawable(textSizeIcon)
-    textSizeDismiss.setImageDrawable(dismissIcon)
-    textSizeSeekbar.progress = preferences.articleTextSizeIncrement()
+    binding.textSizeIconView.setImageDrawable(textSizeIcon)
+    binding.textSizeDismiss.setImageDrawable(dismissIcon)
+    binding.textSizeDismiss.setOnClickListener { onTextSizeDismiss() }
+    binding.textSizeSeekbar.progress = preferences.articleTextSizeIncrement()
     subs.add(RxSeekBar
-      .changes(textSizeSeekbar)
+      .changes(binding.textSizeSeekbar)
       .skip(1)
       .subscribe { size ->
-        recyclerView.post {
+        binding.recyclerView.post {
           if (::articleAdapter.isInitialized) {
             articleAdapter.textSizeIncrementSp = size
           }
@@ -268,9 +272,9 @@ class ArticleActivity : BrowsingActivity() {
   }
 
   private fun handleBlackTheme() {
-    coordinatorLayout.setBackgroundColor(Color.BLACK)
-    bottomNavigation.setBackgroundColor(Color.BLACK)
-    articleTextSizeCard.setBackgroundColor(Color.BLACK)
+    binding.coordinatorLayout.setBackgroundColor(Color.BLACK)
+    binding.bottomNavigation.setBackgroundColor(Color.BLACK)
+    binding.articleTextSizeCard.setBackgroundColor(Color.BLACK)
     setNavigationBarColor(Color.BLACK)
   }
 
@@ -316,26 +320,25 @@ class ArticleActivity : BrowsingActivity() {
           tabsManager.openUrl(this@ArticleActivity, Website(url))
         }
     }
-    recyclerView.apply {
+    binding.recyclerView.apply {
       layoutManager = LinearLayoutManager(this@ArticleActivity)
       adapter = articleAdapter
     }
     hideLoading()
   }
 
-  @OnClick(R.id.textSizeDismiss)
-  fun onTextSizeDismiss() {
-    TransitionManager.beginDelayedTransition(articleBottomLinearLayout)
-    articleTextSizeCard.gone()
+  private fun onTextSizeDismiss() {
+    TransitionManager.beginDelayedTransition(binding.articleBottomLinearLayout)
+    binding.articleTextSizeCard.gone()
 
-    val currentIncrement = textSizeSeekbar.progress
+    val currentIncrement = binding.textSizeSeekbar.progress
     if (currentIncrement != preferences.articleTextSizeIncrement()) {
       with(MaterialDialog.Builder(this)) {
         title(R.string.save_size_dialog_title)
         content(R.string.save_size_dialog_content)
         positiveText(android.R.string.yes)
         negativeText(android.R.string.no)
-        onPositive { _, _ -> preferences.articleTextSizeIncrement(textSizeSeekbar.progress) }
+        onPositive { _, _ -> preferences.articleTextSizeIncrement(binding.textSizeSeekbar.progress) }
         build()
       }.show()
     }

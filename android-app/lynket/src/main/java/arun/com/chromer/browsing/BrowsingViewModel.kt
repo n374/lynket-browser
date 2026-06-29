@@ -25,17 +25,19 @@ import android.app.ActivityManager
 import android.app.Application
 import android.os.Build
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import arun.com.chromer.R
 import arun.com.chromer.data.Result
 import arun.com.chromer.data.website.WebsiteRepository
 import arun.com.chromer.data.website.model.Website
 import arun.com.chromer.settings.Preferences
 import arun.com.chromer.shared.Constants
-import arun.com.chromer.util.SchedulerProvider
+import arun.com.chromer.util.RxSchedulerUtils
 import arun.com.chromer.util.Utils
 import arun.com.chromer.util.compat.TaskDescriptionCompat
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import rx.Observable
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
@@ -44,15 +46,19 @@ import javax.inject.Inject
 
 /**
  * A simple view model delivering a {@link Website} from repo and handling related tasks.
+ *
+ * Migrated to Hilt: Uses @HiltViewModel annotation for automatic ViewModel injection.
+ * Retains RxJava 1.x for now (will be migrated to Flows in future phase).
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+@HiltViewModel
 class BrowsingViewModel
 @Inject
 constructor(
-  application: Application,
+  @ApplicationContext private val application: Application,
   private val preferences: Preferences,
   private val websiteRepository: WebsiteRepository
-) : AndroidViewModel(application) {
+) : ViewModel() {
   private val subs = CompositeSubscription()
 
   var isIncognito: Boolean = false
@@ -74,7 +80,7 @@ constructor(
       .switchMap { url ->
         websiteObservable(url)
           .compose(Result.applyToObservable())
-          .compose(SchedulerProvider.applyIoSchedulers())
+          .compose(RxSchedulerUtils.applyIoSchedulers())
       }.subscribe({ result ->
         websiteLiveData.value = result
         if (result is Result.Success) {
@@ -106,7 +112,7 @@ constructor(
               )
             }.doOnNext(this::setTaskDescription)
             .doOnError(Timber::e)
-            .compose(SchedulerProvider.applyIoSchedulers())
+            .compose(RxSchedulerUtils.applyIoSchedulers())
         }.subscribe()
     )
   }

@@ -39,8 +39,8 @@ import com.jakewharton.rxrelay2.PublishRelay
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
 import dev.arunkumar.android.dagger.view.PerView
-import dev.arunkumar.android.epoxy.span.TotalSpanOverride
-import dev.arunkumar.common.context.dpToPx
+import dev.arunkumar.android.epoxy.TotalSpanOverride
+import dev.arunkumar.android.common.dpToPx
 import io.reactivex.Observable
 import javax.inject.Inject
 
@@ -122,26 +122,26 @@ constructor(
 
 
   override fun buildModels() {
-    if (searchProviders.isNotEmpty() && showSearchProviders) {
+    if (searchProviders.isNotEmpty() && this@SuggestionController.showSearchProviders) {
       searchProviders.forEach { searchProvider ->
         searchProviderLayout {
           id(searchProvider.hashCode())
           searchProvider(searchProvider)
           spanSizeOverride { _, _, _ -> 2 }
           onClick { _ ->
-            searchProviderRelay.accept(searchProvider)
-            showSearchProviders = false
+            this@SuggestionController.searchProviderRelay.accept(searchProvider)
+            this@SuggestionController.showSearchProviders = false
           }
         }
       }
       headerLayout {
         id("search-engines-header")
-        title(activity.getString(R.string.pick_search_engines))
+        title(this@SuggestionController.activity.getString(R.string.pick_search_engines))
         spanSizeOverride(TotalSpanOverride)
       }
       spaceLayout {
         id("search-engines-header-space")
-        spaceHeight(activity.dpToPx(8.0))
+        spaceHeight(8.dpToPx())
         spaceWidth(MATCH_PARENT)
         spanSizeOverride(TotalSpanOverride)
       }
@@ -152,15 +152,15 @@ constructor(
       suggestionLayout {
         id(suggestion.hashCode())
         suggestionItem(suggestion)
-        copyIcon(copyIcon)
-        historyIcon(historyIcon)
-        searchIcon(searchIcon)
+        copyIcon(this@SuggestionController.copyIcon)
+        historyIcon(this@SuggestionController.historyIcon)
+        searchIcon(this@SuggestionController.searchIcon)
         spanSizeOverride(TotalSpanOverride)
         onClickListener { _ ->
-          suggestionsClicksRelay.accept(suggestion)
+          this@SuggestionController.suggestionsClicksRelay.accept(suggestion)
         }
         onLongClickListener { _ ->
-          suggestionLongClickRelay.accept(suggestion)
+          this@SuggestionController.suggestionLongClickRelay.accept(suggestion)
           return@onLongClickListener true
         }
       }
@@ -172,19 +172,19 @@ constructor(
         websiteLayout {
           id(suggestion.hashCode())
           website(suggestion.website)
-          tabsManager(tabsManager)
-          query(query)
+          tabsManager(this@SuggestionController.tabsManager)
+          query(this@SuggestionController.query)
         }
       }.count().let { size ->
         if (size != 0) {
           headerLayout {
             id("history-header")
-            title(activity.getString(R.string.title_history))
+            title(this@SuggestionController.activity.getString(R.string.title_history))
             spanSizeOverride(TotalSpanOverride)
           }
           spaceLayout {
             id("history-header-space")
-            spaceHeight(activity.dpToPx(4.0))
+            spaceHeight(4.dpToPx())
             spaceWidth(MATCH_PARENT)
             spanSizeOverride(TotalSpanOverride)
           }
@@ -195,16 +195,16 @@ constructor(
       suggestionLayout {
         id(suggestion.hashCode())
         suggestionItem(suggestion)
-        copyIcon(copyIcon)
-        historyIcon(historyIcon)
-        searchIcon(searchIcon)
+        copyIcon(this@SuggestionController.copyIcon)
+        historyIcon(this@SuggestionController.historyIcon)
+        searchIcon(this@SuggestionController.searchIcon)
         spanSizeOverride(TotalSpanOverride)
-        query(query)
+        query(this@SuggestionController.query)
         onClickListener { _ ->
-          suggestionsClicksRelay.accept(suggestion)
+          this@SuggestionController.suggestionsClicksRelay.accept(suggestion)
         }
         onLongClickListener { _ ->
-          suggestionLongClickRelay.accept(suggestion)
+          this@SuggestionController.suggestionLongClickRelay.accept(suggestion)
           return@onLongClickListener true
         }
       }

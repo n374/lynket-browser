@@ -31,6 +31,7 @@ import android.widget.ImageView
 import androidx.core.net.toUri
 import arun.com.chromer.R
 import arun.com.chromer.about.AboutAppActivity
+import arun.com.chromer.databinding.LayoutHomeBottomSheetBinding
 import arun.com.chromer.intro.ChromerIntroActivity
 import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.Utils
@@ -40,9 +41,11 @@ import com.mikepenz.materialdrawer.AccountHeaderBuilder
 import com.mikepenz.materialdrawer.DrawerBuilder
 import com.mikepenz.materialdrawer.model.DividerDrawerItem
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
-import kotlinx.android.synthetic.main.layout_home_bottom_sheet.*
 
 class HomeBottomSheet : BottomSheetDialogFragment() {
+
+  private var _binding: LayoutHomeBottomSheetBinding? = null
+  private val binding get() = _binding!!
 
   companion object {
     // TODO Refactor to items
@@ -60,7 +63,10 @@ class HomeBottomSheet : BottomSheetDialogFragment() {
     inflater: LayoutInflater,
     container: ViewGroup?,
     savedInstanceState: Bundle?
-  ): View = inflater.inflate(R.layout.layout_home_bottom_sheet, container, false)
+  ): View {
+    _binding = LayoutHomeBottomSheetBinding.inflate(inflater, container, false)
+    return binding.root
+  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
@@ -148,6 +154,11 @@ class HomeBottomSheet : BottomSheetDialogFragment() {
     }.apply {
       setSelection(-1)
     }
-    homeBottomSheet.addView(drawer.slider)
+    binding.homeBottomSheet.addView(drawer.slider)
+  }
+
+  override fun onDestroyView() {
+    super.onDestroyView()
+    _binding = null
   }
 }

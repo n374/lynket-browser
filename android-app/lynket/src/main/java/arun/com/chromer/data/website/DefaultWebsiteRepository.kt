@@ -31,7 +31,7 @@ import arun.com.chromer.data.website.model.WebColor
 import arun.com.chromer.data.website.model.Website
 import arun.com.chromer.data.website.stores.WebsiteStore
 import arun.com.chromer.shared.Constants.NO_COLOR
-import arun.com.chromer.util.SchedulerProvider
+import arun.com.chromer.util.RxSchedulerUtils
 import rx.Observable
 import rx.schedulers.Schedulers
 import timber.log.Timber
@@ -80,7 +80,7 @@ internal constructor(
       .onErrorReturn { throwable ->
         Timber.e(throwable)
         Website(url)
-      }.compose(SchedulerProvider.applyIoSchedulers())
+      }.compose(RxSchedulerUtils.applyIoSchedulers())
   }
 
 
@@ -96,7 +96,7 @@ internal constructor(
       .onErrorReturn { throwable ->
         Timber.e(throwable)
         Website(url)
-      }.compose(SchedulerProvider.applyIoSchedulers())
+      }.compose(RxSchedulerUtils.applyIoSchedulers())
   }
 
   override fun getWebsiteColorSync(url: String): Int {

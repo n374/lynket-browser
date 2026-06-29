@@ -35,9 +35,8 @@
     android:name="android.permission.PACKAGE_USAGE_STATS"
     tools:ignore="ProtectedPermissions" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
   <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-
-  <uses-sdk tools:overrideLibrary="in.arunkumarsampath.transitionx" />
 
   <application
     android:name=".Lynket"
@@ -61,7 +60,8 @@
     <service
       android:name="arun.com.chromer.bubbles.webheads.WebHeadService"
       android:enabled="true"
-      android:exported="false" />
+      android:exported="false"
+      android:foregroundServiceType="specialUse" />
     <service
       android:name=".browsing.customtabs.KeepAliveService"
       android:enabled="true"
@@ -116,18 +116,12 @@
     <receiver android:name=".browsing.customtabs.callbacks.MinimizeBroadcastReceiver" />
     <receiver android:name=".browsing.customtabs.bottombar.BottomBarReceiver" />
 
-    <!-- Chromer launcher activity -->
+    <!-- Modern Compose-based main activity (Phase 3) -->
     <activity
-      android:name=".home.HomeActivity"
-      android:exported="true"
-      android:theme="@style/AppTheme.Launcher"
-      android:windowSoftInputMode="adjustResize" />
-
-    <activity-alias
       android:name=".MainActivity"
       android:exported="true"
       android:label="@string/app_name"
-      android:targetActivity=".home.HomeActivity"
+      android:theme="@style/AppTheme.Launcher"
       android:windowSoftInputMode="adjustPan">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
@@ -138,7 +132,14 @@
       <meta-data
         android:name="android.app.shortcuts"
         android:resource="@xml/shortcuts" />
-    </activity-alias>
+    </activity>
+
+    <!-- Legacy Home Activity (kept for backward compatibility) -->
+    <activity
+      android:name=".home.HomeActivity"
+      android:exported="false"
+      android:theme="@style/AppTheme.Launcher"
+      android:windowSoftInputMode="adjustResize" />
 
     <!-- Entry point for browser activity -->
     <activity
@@ -149,6 +150,7 @@
 
     <activity-alias
       android:name=".activities.BrowserInterceptActivity"
+      android:exported="true"
       android:label="@string/app_name"
       android:targetActivity=".browsing.browserintercept.BrowserInterceptActivity"
       android:theme="@style/Theme.AppCompat.Translucent">

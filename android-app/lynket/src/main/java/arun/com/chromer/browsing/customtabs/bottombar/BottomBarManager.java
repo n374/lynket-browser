@@ -24,6 +24,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -127,6 +128,10 @@ public class BottomBarManager {
   public static PendingIntent getOnClickPendingIntent(Context context, String url) {
     final Intent broadcastIntent = new Intent(context, BottomBarReceiver.class);
     broadcastIntent.putExtra(Constants.EXTRA_KEY_ORIGINAL_URL, url);
-    return PendingIntent.getBroadcast(context, new Random().nextInt(), broadcastIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      flags |= PendingIntent.FLAG_IMMUTABLE;
+    }
+    return PendingIntent.getBroadcast(context, new Random().nextInt(), broadcastIntent, flags);
   }
 }

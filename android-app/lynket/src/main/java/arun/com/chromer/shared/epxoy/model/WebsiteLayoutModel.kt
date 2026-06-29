@@ -20,9 +20,11 @@
 
 package arun.com.chromer.shared.epxoy.model
 
+import android.view.View
 import androidx.core.text.toSpannable
 import arun.com.chromer.R
 import arun.com.chromer.data.website.model.Website
+import arun.com.chromer.databinding.WidgetWebsiteGridItemBinding
 import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.util.glide.GlideApp
 import arun.com.chromer.util.makeMatchingBold
@@ -31,11 +33,17 @@ import com.airbnb.epoxy.EpoxyAttribute.Option.DoNotHash
 import com.airbnb.epoxy.EpoxyModelClass
 import dev.arunkumar.android.epoxy.model.KotlinEpoxyModelWithHolder
 import dev.arunkumar.android.epoxy.model.KotlinHolder
-import kotlinx.android.synthetic.main.widget_website_grid_item.*
 
 @EpoxyModelClass(layout = R.layout.widget_website_grid_item)
 abstract class WebsiteLayoutModel : KotlinEpoxyModelWithHolder<WebsiteLayoutModel.ViewHolder>() {
-  class ViewHolder : KotlinHolder()
+  class ViewHolder : KotlinHolder() {
+    internal lateinit var binding: WidgetWebsiteGridItemBinding
+
+    override fun bindView(itemView: View) {
+      super.bindView(itemView)
+      binding = WidgetWebsiteGridItemBinding.bind(itemView)
+    }
+  }
 
   @EpoxyAttribute
   lateinit var website: Website
@@ -47,12 +55,12 @@ abstract class WebsiteLayoutModel : KotlinEpoxyModelWithHolder<WebsiteLayoutMode
   var query: String = ""
 
   override fun bind(holder: ViewHolder) {
-    holder.apply {
+    holder.binding.apply {
       label.text = website.safeLabel().toSpannable().makeMatchingBold(query)
-      containerView.setOnClickListener {
-        tabsManager.openUrl(containerView.context, website)
+      root.setOnClickListener {
+        tabsManager.openUrl(root.context, website)
       }
-      GlideApp.with(containerView.context)
+      GlideApp.with(root.context)
         .load(website)
         .into(icon)
     }

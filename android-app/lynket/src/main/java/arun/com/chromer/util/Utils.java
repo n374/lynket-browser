@@ -68,7 +68,7 @@ import arun.com.chromer.R;
 import arun.com.chromer.browsing.customtabs.CustomTabs;
 import arun.com.chromer.data.common.App;
 import arun.com.chromer.shared.Constants;
-import arun.com.chromer.shared.views.IntentPickerSheetView;
+import arun.com.chromer.shared.views.IntentPickerBottomSheet;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -180,8 +180,8 @@ public class Utils {
   }
 
   @NonNull
-  public static List<IntentPickerSheetView.ActivityInfo> getCustomTabActivityInfos(@NonNull Context context) {
-    List<IntentPickerSheetView.ActivityInfo> apps = new ArrayList<>();
+  public static List<IntentPickerBottomSheet.ActivityInfo> getCustomTabActivityInfos(@NonNull Context context) {
+    List<IntentPickerBottomSheet.ActivityInfo> apps = new ArrayList<>();
     PackageManager pm = context.getApplicationContext().getPackageManager();
     @SuppressLint("InlinedApi")
     List<ResolveInfo> resolvedActivityList = pm.queryIntentActivities(Constants.WEB_INTENT, PackageManager.MATCH_ALL);
@@ -189,7 +189,14 @@ public class Utils {
       final String packageName = info.activityInfo.packageName;
       if (CustomTabs.isPackageSupportCustomTabs(context, packageName)) {
         ComponentName componentName = new ComponentName(info.activityInfo.packageName, info.activityInfo.name);
-        IntentPickerSheetView.ActivityInfo activityInfo = new IntentPickerSheetView.ActivityInfo(info, info.loadLabel(pm), componentName);
+        Drawable icon = info.loadIcon(pm);
+        String label = info.loadLabel(pm).toString();
+        IntentPickerBottomSheet.ActivityInfo activityInfo = new IntentPickerBottomSheet.ActivityInfo(
+          info,
+          label,
+          componentName,
+          icon
+        );
         apps.add(activityInfo);
       }
     }

@@ -23,48 +23,52 @@ package arun.com.chromer.history
 import android.os.Bundle
 import android.view.MenuItem
 import arun.com.chromer.R
+import arun.com.chromer.databinding.ActivityHistoryBinding
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.shared.FabHandler
 import arun.com.chromer.shared.base.Snackable
 import arun.com.chromer.shared.base.activity.BaseActivity
-import butterknife.OnClick
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_history.*
 
 class HistoryActivity : BaseActivity(), Snackable {
+
+  private lateinit var binding: ActivityHistoryBinding
 
   override val layoutRes: Int
     get() = R.layout.activity_history
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setSupportActionBar(toolbar)
+    binding = ActivityHistoryBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+
+    setSupportActionBar(binding.toolbar)
     if (supportActionBar != null) {
       supportActionBar!!.setDisplayHomeAsUpEnabled(true)
     }
+
+    binding.fab.setOnClickListener {
+      supportFragmentManager.fragments
+        .asSequence()
+        .filter { !it.isHidden && it is FabHandler }
+        .map { it as FabHandler }
+        .toList()
+        .first()
+        .onFabClick()
+    }
+
     supportFragmentManager
       .beginTransaction()
       .replace(R.id.fragment_container, HistoryFragment())
       .commit()
   }
 
-  @OnClick(R.id.fab)
-  fun onFabClick() {
-    supportFragmentManager.fragments
-      .asSequence()
-      .filter { !it.isHidden && it is FabHandler }
-      .map { it as FabHandler }
-      .toList()
-      .first()
-      .onFabClick()
-  }
-
   override fun snack(textToSnack: String) {
-    Snackbar.make(coordinatorLayout, textToSnack, Snackbar.LENGTH_SHORT).show()
+    Snackbar.make(binding.coordinatorLayout, textToSnack, Snackbar.LENGTH_SHORT).show()
   }
 
   override fun snackLong(textToSnack: String) {
-    Snackbar.make(coordinatorLayout, textToSnack, Snackbar.LENGTH_LONG).show()
+    Snackbar.make(binding.coordinatorLayout, textToSnack, Snackbar.LENGTH_LONG).show()
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {

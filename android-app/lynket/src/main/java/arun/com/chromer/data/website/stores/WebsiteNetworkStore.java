@@ -39,7 +39,7 @@ import arun.com.chromer.data.website.model.WebColor;
 import arun.com.chromer.data.website.model.Website;
 import arun.com.chromer.shared.Constants;
 import arun.com.chromer.util.ColorUtil;
-import arun.com.chromer.util.SchedulerProvider;
+import arun.com.chromer.util.RxSchedulerUtils;
 import arun.com.chromer.util.Utils;
 import arun.com.chromer.util.glide.GlideApp;
 import arun.com.chromer.util.parser.RxParser;
@@ -71,7 +71,7 @@ public class WebsiteNetworkStore implements WebsiteStore {
         } else {
           return Observable.just(new Website(urlArticlePair.first));
         }
-      }).compose(SchedulerProvider.applyIoSchedulers());
+      }).compose(RxSchedulerUtils.applyIoSchedulers());
   }
 
   @NonNull

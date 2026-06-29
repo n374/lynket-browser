@@ -21,24 +21,28 @@
 package arun.com.chromer.intro.fragments
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import arun.com.chromer.R
 import arun.com.chromer.data.website.model.Website
+import arun.com.chromer.databinding.FragmentArticleIntroBinding
 import arun.com.chromer.di.fragment.FragmentComponent
 import arun.com.chromer.shared.base.fragment.BaseFragment
 import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.util.glide.GlideApp
-import butterknife.OnClick
 import com.github.paolorotolo.appintro.ISlideBackgroundColorHolder
-import kotlinx.android.synthetic.main.fragment_slide_over_intro.*
 import javax.inject.Inject
 
 open class ArticleIntroFragment : BaseFragment(), ISlideBackgroundColorHolder {
+  private var _binding: FragmentArticleIntroBinding? = null
+  private val binding get() = _binding!!
+
   override fun getDefaultBackgroundColor(): Int =
-    ContextCompat.getColor(context!!, R.color.tutorialBackgrounColor)
+    ContextCompat.getColor(requireContext(), R.color.tutorialBackgrounColor)
 
   override fun setBackgroundColor(backgroundColor: Int) {
-    root.setBackgroundColor(backgroundColor)
+    _binding?.root?.setBackgroundColor(backgroundColor)
   }
 
   @Inject
@@ -48,13 +52,24 @@ open class ArticleIntroFragment : BaseFragment(), ISlideBackgroundColorHolder {
 
   override val layoutRes: Int get() = R.layout.fragment_article_intro
 
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ) = FragmentArticleIntroBinding.inflate(inflater, container, false).also {
+    _binding = it
+  }.root
+
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-    GlideApp.with(this).load(R.drawable.tutorial_article_mode).into(imageView!!)
+    GlideApp.with(this).load(R.drawable.tutorial_article_mode).into(binding.imageView)
+    binding.tryItButton.setOnClickListener {
+      tabsManager.openArticle(requireContext(), Website("https://en.wikipedia.org/wiki/Web_browser"))
+    }
   }
 
-  @OnClick(R.id.tryItButton)
-  fun onSeeDemoClick() {
-    tabsManager.openArticle(context!!, Website("https://en.wikipedia.org/wiki/Web_browser"))
+  override fun onDestroyView() {
+    super.onDestroyView()
+    _binding = null
   }
 }

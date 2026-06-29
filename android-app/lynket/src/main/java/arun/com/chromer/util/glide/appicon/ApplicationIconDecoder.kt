@@ -47,7 +47,7 @@ class ApplicationIconDecoder(
     val packageName = source.packageName
     val packageManager = context.packageManager
     packageManager.getApplicationIcon(packageName).toBitmap().let { bitmap ->
-      val bitmapCopy = bitmap.copy(bitmap.config, true)
+      val bitmapCopy = bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, true)
       BitmapResource.obtain(bitmapCopy, bitmapPool)
     }
   } catch (e: PackageManager.NameNotFoundException) {

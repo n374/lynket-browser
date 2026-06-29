@@ -22,9 +22,8 @@ package arun.com.chromer.browsing.article
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import arun.com.chromer.R
+import arun.com.chromer.databinding.ActivityImageViewBinding
 import arun.com.chromer.util.glide.GlideApp
-import kotlinx.android.synthetic.main.activity_image_view.*
 
 /**
  * Activity for viewing full size images from an article. Images are zoomable. You can pass in the
@@ -32,12 +31,15 @@ import kotlinx.android.synthetic.main.activity_image_view.*
  */
 class ImageViewActivity : AppCompatActivity() {
 
+  private lateinit var binding: ActivityImageViewBinding
+
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_image_view)
+    binding = ActivityImageViewBinding.inflate(layoutInflater)
+    setContentView(binding.root)
     val url = intent.dataString
     GlideApp.with(this)
       .load(url)
-      .into(imageView)
+      .into(binding.imageView)
   }
 }

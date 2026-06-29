@@ -39,18 +39,18 @@ import arun.com.chromer.browsing.BrowsingActivity
 import arun.com.chromer.browsing.EXTRA_CURRENT_LOADING_URL
 import arun.com.chromer.browsing.menu.MenuDelegate
 import arun.com.chromer.data.website.model.Website
+import arun.com.chromer.databinding.ActivityWebViewBinding
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.extenstions.applyColor
 import arun.com.chromer.extenstions.setAutoHideProgress
 import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.ColorUtil
 import arun.com.chromer.util.Utils
-import kotlinx.android.synthetic.main.activity_web_view.*
-import kotlinx.android.synthetic.main.activity_web_view_content.*
 import timber.log.Timber
 import javax.inject.Inject
 
 open class WebViewActivity : BrowsingActivity() {
+  private lateinit var binding: ActivityWebViewBinding
   @Inject
   lateinit var menuDelegate: MenuDelegate
 
@@ -58,10 +58,15 @@ open class WebViewActivity : BrowsingActivity() {
   private var fgColorStateList: ColorStateList = ColorStateList.valueOf(0)
   private var foregroundColor = 0
 
+  override val layoutRes: Int = 0 // Using ViewBinding instead
+
   override fun inject(activityComponent: ActivityComponent) = activityComponent.inject(this)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    binding = ActivityWebViewBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+
     setupToolbar()
     setupSwipeRefresh()
     setupWebView(savedInstanceState)
@@ -69,8 +74,8 @@ open class WebViewActivity : BrowsingActivity() {
   }
 
   override fun getCurrentUrl(): String {
-    return if (webView.url != null)
-      webView.url!!
+    return if (binding.activityWebViewContent.webView.url != null)
+      binding.activityWebViewContent.webView.url!!
     else super.getCurrentUrl()
   }
 
@@ -83,17 +88,17 @@ open class WebViewActivity : BrowsingActivity() {
   }
 
   private fun setupBottomBar() {
-    menuDelegate.setupBottombar(bottomNavigation)
+    menuDelegate.setupBottombar(binding.bottomNavigation)
   }
 
   override fun onDestroy() {
-    webView.destroy()
+    binding.activityWebViewContent.webView.destroy()
     super.onDestroy()
   }
 
   override fun onBackPressed() {
-    if (webView.canGoBack()) {
-      webView.goBack()
+    if (binding.activityWebViewContent.webView.canGoBack()) {
+      binding.activityWebViewContent.webView.goBack()
     } else {
       super.onBackPressed()
     }
@@ -110,12 +115,10 @@ open class WebViewActivity : BrowsingActivity() {
     setAppBarColor(websiteThemeColor)
   }
 
-  override val layoutRes: Int get() = R.layout.activity_web_view
-
   private fun setupSwipeRefresh() {
-    with(swipeRefreshLayout) {
+    with(binding.activityWebViewContent.swipeRefreshLayout) {
       setOnRefreshListener {
-        webView.reload()
+        binding.activityWebViewContent.webView.reload()
       }
       setColorSchemeColors(
         ContextCompat.getColor(context, R.color.primary),
@@ -125,7 +128,7 @@ open class WebViewActivity : BrowsingActivity() {
   }
 
   private fun setupToolbar() {
-    setSupportActionBar(toolbar)
+    setSupportActionBar(binding.toolbar)
     supportActionBar?.apply {
       setDisplayHomeAsUpEnabled(true)
       setHomeAsUpIndicator(R.drawable.article_ic_close)
@@ -138,7 +141,7 @@ open class WebViewActivity : BrowsingActivity() {
   @SuppressLint("SetJavaScriptEnabled")
   private fun setupWebView(savedInstanceState: Bundle?) {
     try {
-      webView.apply {
+      binding.activityWebViewContent.webView.apply {
         webViewClient = object : WebViewClient() {
           override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
             super.onPageStarted(view, url, favicon)
@@ -182,13 +185,13 @@ open class WebViewActivity : BrowsingActivity() {
 
   private fun setToolbarTitle(title: String?) {
     if (!TextUtils.isEmpty(title)) {
-      toolbar.title = title
+      binding.toolbar.title = title
     }
   }
 
   private fun setToolbarSubtitle(subtitle: String?) {
-    if (!TextUtils.isEmpty(subtitle) && toolbar.title != subtitle) {
-      toolbar.subtitle = subtitle
+    if (!TextUtils.isEmpty(subtitle) && binding.toolbar.title != subtitle) {
+      binding.toolbar.subtitle = subtitle
     }
   }
 
@@ -197,7 +200,7 @@ open class WebViewActivity : BrowsingActivity() {
     foregroundColor = ColorUtil.getForegroundWhiteOrBlack(themeColor)
     fgColorStateList = ColorStateList.valueOf(foregroundColor)
 
-    toolbar.apply {
+    binding.toolbar.apply {
       setBackgroundColor(themeColor)
       setTitleTextColor(foregroundColor)
       setSubtitleTextColor(foregroundColor)
@@ -207,33 +210,33 @@ open class WebViewActivity : BrowsingActivity() {
       }
     }
 
-    progressBar.apply {
+    binding.progressBar.apply {
       useIntrinsicPadding = false
       progressBackgroundTintList = ColorStateList.valueOf(themeColor)
       progressTintList = ColorStateList.valueOf(foregroundColor)
     }
 
-    bottomNavigation.background = ColorDrawable(themeColor)
-    bottomNavigation.itemIconTintList = ColorStateList.valueOf(foregroundColor)
-    bottomNavigation.itemTextColor = ColorStateList.valueOf(foregroundColor)
+    binding.bottomNavigation.background = ColorDrawable(themeColor)
+    binding.bottomNavigation.itemIconTintList = ColorStateList.valueOf(foregroundColor)
+    binding.bottomNavigation.itemTextColor = ColorStateList.valueOf(foregroundColor)
 
-    swipeRefreshLayout.setColorSchemeColors(themeColor, ColorUtil.getClosestAccentColor(themeColor))
+    binding.activityWebViewContent.swipeRefreshLayout.setColorSchemeColors(themeColor, ColorUtil.getClosestAccentColor(themeColor))
     if (Utils.ANDROID_LOLLIPOP) {
       window.statusBarColor = ColorUtil.getDarkenedColorForStatusBar(themeColor)
     }
   }
 
   private fun setLoadingProgress(newProgress: Int) {
-    progressBar.setAutoHideProgress(newProgress, fgColorStateList)
+    binding.progressBar.setAutoHideProgress(newProgress, fgColorStateList)
   }
 
 
   private fun showLoading() {
-    swipeRefreshLayout.isRefreshing = true
+    binding.activityWebViewContent.swipeRefreshLayout.isRefreshing = true
   }
 
 
   private fun hideLoading() {
-    swipeRefreshLayout.isRefreshing = false
+    binding.activityWebViewContent.swipeRefreshLayout.isRefreshing = false
   }
 }

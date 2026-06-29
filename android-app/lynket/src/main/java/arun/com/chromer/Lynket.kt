@@ -30,14 +30,22 @@ import arun.com.chromer.util.ServiceManager
 import com.airbnb.epoxy.EpoxyController
 import com.mikepenz.materialdrawer.util.DrawerImageLoader
 import com.uber.rxdogtag.RxDogTag
+import dagger.hilt.android.HiltAndroidApp
 import io.paperdb.Paper
 import timber.log.Timber
 
 /**
- * Created by Arun on 06/01/2016.
+ * Lynket Browser Application Class
+ *
+ * Phase 1.2: Migrated to Hilt (@HiltAndroidApp)
+ * Legacy Dagger 2 code kept temporarily for gradual migration
  */
+@HiltAndroidApp
 open class Lynket : Application() {
 
+  // LEGACY: Dagger 2 AppComponent - Will be removed after full Hilt migration
+  // TODO: Remove this after all components are migrated to Hilt
+  @Deprecated("Use Hilt injection instead", ReplaceWith("@Inject"))
   open val appComponent: AppComponent by lazy {
     DaggerAppComponent.factory().create(this)
   }

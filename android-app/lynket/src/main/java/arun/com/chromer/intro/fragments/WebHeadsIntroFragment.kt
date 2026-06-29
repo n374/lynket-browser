@@ -23,23 +23,27 @@ package arun.com.chromer.intro.fragments
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import arun.com.chromer.R
+import arun.com.chromer.databinding.FragmentWebHeadsIntroBinding
 import arun.com.chromer.di.fragment.FragmentComponent
 import arun.com.chromer.shared.base.fragment.BaseFragment
 import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.util.glide.GlideApp
-import butterknife.OnClick
 import com.github.paolorotolo.appintro.ISlideBackgroundColorHolder
-import kotlinx.android.synthetic.main.fragment_slide_over_intro.*
 import javax.inject.Inject
 
 open class WebHeadsIntroFragment : BaseFragment(), ISlideBackgroundColorHolder {
+  private var _binding: FragmentWebHeadsIntroBinding? = null
+  private val binding get() = _binding!!
+
   override fun getDefaultBackgroundColor(): Int =
-    ContextCompat.getColor(context!!, R.color.tutorialBackgrounColor)
+    ContextCompat.getColor(requireContext(), R.color.tutorialBackgrounColor)
 
   override fun setBackgroundColor(backgroundColor: Int) {
-    root.setBackgroundColor(backgroundColor)
+    _binding?.root?.setBackgroundColor(backgroundColor)
   }
 
   @Inject
@@ -50,18 +54,29 @@ open class WebHeadsIntroFragment : BaseFragment(), ISlideBackgroundColorHolder {
   override val layoutRes: Int
     get() = R.layout.fragment_web_heads_intro
 
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ) = FragmentWebHeadsIntroBinding.inflate(inflater, container, false).also {
+    _binding = it
+  }.root
+
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-    GlideApp.with(this).load(R.drawable.tutorial_web_heads).into(imageView!!)
+    GlideApp.with(this).load(R.drawable.tutorial_web_heads).into(binding.imageView)
+    binding.watchDemo.setOnClickListener {
+      startActivity(
+        Intent(
+          Intent.ACTION_VIEW,
+          Uri.parse("https://www.youtube.com/watch?v=3gbz8PI8BVI&feature=youtu.be")
+        )
+      )
+    }
   }
 
-  @OnClick(R.id.watchDemo)
-  fun onSeeDemoClick() {
-    startActivity(
-      Intent(
-        Intent.ACTION_VIEW,
-        Uri.parse("https://www.youtube.com/watch?v=3gbz8PI8BVI&feature=youtu.be")
-      )
-    )
+  override fun onDestroyView() {
+    super.onDestroyView()
+    _binding = null
   }
 }

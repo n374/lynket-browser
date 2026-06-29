@@ -22,25 +22,30 @@ package arun.com.chromer.intro.fragments
 
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import arun.com.chromer.R
 import arun.com.chromer.data.website.model.Website
+import arun.com.chromer.databinding.FragmentSlideOverIntroBinding
 import arun.com.chromer.di.fragment.FragmentComponent
 import arun.com.chromer.shared.base.fragment.BaseFragment
 import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.util.glide.GlideApp
-import butterknife.OnClick
 import com.github.paolorotolo.appintro.ISlideBackgroundColorHolder
-import kotlinx.android.synthetic.main.fragment_slide_over_intro.*
 import javax.inject.Inject
 
 open class SlideOverExplanationFragment : BaseFragment(), ISlideBackgroundColorHolder {
+  private var _binding: FragmentSlideOverIntroBinding? = null
+  private val binding get() = _binding!!
+
   override fun getDefaultBackgroundColor(): Int =
-    ContextCompat.getColor(context!!, R.color.tutorialBackgrounColor)
+    ContextCompat.getColor(requireContext(), R.color.tutorialBackgrounColor)
 
   override fun setBackgroundColor(backgroundColor: Int) {
-    root.setBackgroundColor(backgroundColor)
+    _binding?.root?.setBackgroundColor(backgroundColor)
   }
 
   @Inject
@@ -50,27 +55,38 @@ open class SlideOverExplanationFragment : BaseFragment(), ISlideBackgroundColorH
   override val layoutRes: Int
     get() = R.layout.fragment_slide_over_intro
 
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ) = FragmentSlideOverIntroBinding.inflate(inflater, container, false).also {
+    _binding = it
+  }.root
+
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-    GlideApp.with(this).load(R.drawable.chromer_hd_icon).into(imageView!!)
+    GlideApp.with(this).load(R.drawable.chromer_hd_icon).into(binding.imageView)
+    binding.tryItButton.setOnClickListener {
+      tabsManager.openBrowsingTab(
+        requireContext(),
+        Website("https://goo.gl/search/lynket"),
+        smart = false,
+        fromNewTab = false
+      )
+      Handler(Looper.getMainLooper()).postDelayed(
+        {
+          if (isAdded) {
+            Toast.makeText(context, R.string.slide_over_fragment_close_prompt, Toast.LENGTH_SHORT)
+              .show()
+          }
+        },
+        200
+      )
+    }
   }
 
-  @OnClick(R.id.tryItButton)
-  fun onTryItClick() {
-    tabsManager.openBrowsingTab(
-      context!!,
-      Website("https://goo.gl/search/lynket"),
-      smart = false,
-      fromNewTab = false
-    )
-    Handler().postDelayed(
-      {
-        if (isAdded) {
-          Toast.makeText(context, R.string.slide_over_fragment_close_prompt, Toast.LENGTH_SHORT)
-            .show()
-        }
-      },
-      200
-    )
+  override fun onDestroyView() {
+    super.onDestroyView()
+    _binding = null
   }
 }

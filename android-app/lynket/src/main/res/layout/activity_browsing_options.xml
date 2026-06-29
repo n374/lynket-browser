@@ -44,6 +44,6 @@
 
   <include layout="@layout/activity_browsing_options_content" />
 
-  <include layout="@layout/widget_bottom_sheet_layout" />
+  <!-- Bottom sheet is now shown programmatically via BottomSheetDialogFragment -->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

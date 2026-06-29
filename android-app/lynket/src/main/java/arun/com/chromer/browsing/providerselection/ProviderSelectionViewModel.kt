@@ -24,15 +24,22 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import arun.com.chromer.data.apps.AppRepository
 import arun.com.chromer.data.apps.model.Provider
-import arun.com.chromer.util.SchedulerProvider
+import arun.com.chromer.util.RxSchedulerUtils
+import dagger.hilt.android.lifecycle.HiltViewModel
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
 import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Created by arunk on 17-02-2018.
+ * Legacy ViewModel for ProviderSelectionActivity (XML-based UI).
+ *
+ * Migrated to Hilt: Uses @HiltViewModel annotation for automatic ViewModel injection.
+ * Retains RxJava 1.x for now (will be migrated to Flows in future phase).
+ *
+ * Note: Modern Compose UI uses ModernProviderSelectionViewModel instead.
  */
+@HiltViewModel
 class ProviderSelectionViewModel
 @Inject
 constructor(
@@ -49,7 +56,7 @@ constructor(
       .switchMap {
         return@switchMap appRepository
           .allProviders()
-          .compose(SchedulerProvider.applyIoSchedulers())
+          .compose(RxSchedulerUtils.applyIoSchedulers())
       }.subscribe({ providers ->
         providersLiveData.value = providers
       }, Timber::e)

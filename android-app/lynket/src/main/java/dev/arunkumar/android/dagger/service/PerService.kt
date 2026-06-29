@@ -17,16 +17,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package dev.arunkumar.android.dagger.service
 
-package arun.com.chromer.util;
+import javax.inject.Scope
 
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
-
-public class SchedulerProvider {
-  public static <T> Observable.Transformer<T, T> applyIoSchedulers() {
-    return observable -> observable.subscribeOn(Schedulers.io())
-      .observeOn(AndroidSchedulers.mainThread());
-  }
-}
+/**
+ * Scope annotation for service-level dependencies.
+ * Dependencies with this scope live as long as the service.
+ */
+@Scope
+@Retention(AnnotationRetention.RUNTIME)
+annotation class PerService

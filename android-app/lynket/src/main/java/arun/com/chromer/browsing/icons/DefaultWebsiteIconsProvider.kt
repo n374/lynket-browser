@@ -32,7 +32,7 @@ import androidx.palette.graphics.Palette
 import arun.com.chromer.data.website.model.Website
 import arun.com.chromer.util.ColorUtil
 import arun.com.chromer.util.glide.GlideApp
-import dev.arunkumar.common.context.dpToPx
+import dev.arunkumar.android.common.dpToPx
 import io.reactivex.Single
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -56,7 +56,7 @@ constructor(private val application: Application) : WebsiteIconsProvider {
   private val randomColor get() = placeholderColors.random()
 
   // https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive
-  private val adaptiveIconOuterSize by lazy { application.dpToPx(108.0) }
+  private val adaptiveIconOuterSize by lazy { 108.dpToPx() }
 
   override fun getBubbleIconAndColor(website: Website): Single<WebsiteIconData> {
     return Single.fromCallable {

@@ -34,6 +34,7 @@ public class AndroidBinary : ConfigurablePlugin({
   androidCommon()
 
   configure<ApplicationExtension> {
+    namespace = ANDROID_PACKAGE_NAME
     defaultConfig {
       applicationId = ANDROID_PACKAGE_NAME
       versionCode = ANDROID_VERSION_CODE

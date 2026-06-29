@@ -57,10 +57,16 @@ import arun.com.chromer.settings.Preferences
 import arun.com.chromer.settings.RxPreferences
 import arun.com.chromer.shared.Constants.*
 import arun.com.chromer.tabs.ui.TabsActivity
-import arun.com.chromer.util.*
+import arun.com.chromer.util.RxEventBus
+import arun.com.chromer.util.SafeIntent
+import arun.com.chromer.util.Utils
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.Theme
+import arun.com.chromer.shared.ServiceManager
 import dev.arunkumar.android.rxschedulers.SchedulerProvider
+import dev.arunkumar.android.rxschedulers.compose
+import dev.arunkumar.android.rxschedulers.poolToUi
+import dev.arunkumar.android.rxschedulers.poolToUiCompletable
 import io.reactivex.Completable
 import rx.Single
 import timber.log.Timber
@@ -274,7 +280,7 @@ constructor(
     }
     .doOnError { Timber.e(it, "Critical error when processing incoming intent") }
     .onErrorComplete()
-    .compose(schedulerProvider.poolToUi<Any>())
+    .compose(schedulerProvider.poolToUiCompletable())
 
   @TargetApi(Build.VERSION_CODES.LOLLIPOP)
   override fun openArticle(
@@ -425,7 +431,8 @@ constructor(
         emitter.onSuccess((am.appTasks ?: emptyList<ActivityManager.AppTask>())
           .asSequence()
           .map(DocumentUtils::getTaskInfoFromTask)
-          .filter { it != null && it.baseIntent.dataString != null && it.baseIntent.component != null }
+          .filterNotNull()
+          .filter { it.baseIntent.dataString != null && it.baseIntent.component != null }
           .map {
             val url = it.baseIntent.dataString!!
 

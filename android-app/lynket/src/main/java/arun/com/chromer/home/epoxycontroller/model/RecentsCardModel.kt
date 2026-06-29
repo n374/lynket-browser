@@ -24,6 +24,7 @@ import android.content.Intent
 import android.view.View
 import arun.com.chromer.R
 import arun.com.chromer.data.website.model.Website
+import arun.com.chromer.databinding.LayoutFeedRecentsListBinding
 import arun.com.chromer.history.HistoryActivity
 import arun.com.chromer.shared.epxoy.model.websiteLayout
 import arun.com.chromer.tabs.TabsManager
@@ -33,7 +34,6 @@ import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
 import dev.arunkumar.android.epoxy.model.KotlinEpoxyModelWithHolder
 import dev.arunkumar.android.epoxy.model.KotlinHolder
-import kotlinx.android.synthetic.main.layout_feed_recents_list.*
 
 @EpoxyModelClass(layout = R.layout.layout_feed_recents_list)
 abstract class RecentsCardModel : KotlinEpoxyModelWithHolder<RecentsCardModel.ViewHolder>() {
@@ -49,13 +49,13 @@ abstract class RecentsCardModel : KotlinEpoxyModelWithHolder<RecentsCardModel.Vi
 
   override fun bind(holder: ViewHolder) {
     holder.apply {
-      recentsHeaderIcon.setImageDrawable(
-        IconicsDrawable(holder.containerView.context)
+      binding.recentsHeaderIcon.setImageDrawable(
+        IconicsDrawable(binding.root.context)
           .icon(CommunityMaterial.Icon.cmd_history)
           .colorRes(R.color.accent)
           .sizeDp(24)
       )
-      recentsEpoxyGrid.withModels {
+      binding.recentsEpoxyGrid.withModels {
         websites.forEach { website ->
           websiteLayout {
             id(website.hashCode())
@@ -64,9 +64,16 @@ abstract class RecentsCardModel : KotlinEpoxyModelWithHolder<RecentsCardModel.Vi
           }
         }
       }
-      historyButton.setOnClickListener(historyClickListener)
+      binding.historyButton.setOnClickListener(historyClickListener)
     }
   }
 
-  class ViewHolder : KotlinHolder()
+  class ViewHolder : KotlinHolder() {
+    internal lateinit var binding: LayoutFeedRecentsListBinding
+
+    override fun bindView(itemView: View) {
+      super.bindView(itemView)
+      binding = LayoutFeedRecentsListBinding.bind(itemView)
+    }
+  }
 }

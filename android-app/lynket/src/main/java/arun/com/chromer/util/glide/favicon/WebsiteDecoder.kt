@@ -76,7 +76,7 @@ class WebsiteDecoder(private val context: Context, glide: Glide) :
     }
     return try {
       if (isValidFavicon(websiteFavicon)) {
-        BitmapResource.obtain(websiteFavicon!!.copy(websiteFavicon.config, true), bitmapPool)
+        BitmapResource.obtain(websiteFavicon!!.copy(websiteFavicon.config ?: Bitmap.Config.ARGB_8888, true), bitmapPool)
       } else {
         // Draw a placeholder using theme color if it exists, else use a random color.
         val color = if (website.themeColor() != Constants.NO_COLOR) {
@@ -85,7 +85,7 @@ class WebsiteDecoder(private val context: Context, glide: Glide) :
           placeholderColors.random()
         }
         val createdIcon = createPlaceholderImage(color, website.safeLabel())
-        BitmapResource.obtain(createdIcon.copy(createdIcon.config, true), bitmapPool)
+        BitmapResource.obtain(createdIcon.copy(createdIcon.config ?: Bitmap.Config.ARGB_8888, true), bitmapPool)
       }
     } catch (e: Exception) {
       Timber.e(e)

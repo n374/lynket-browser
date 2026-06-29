@@ -18,7 +18,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 pluginManagement {
-  includeBuild "build-logic"
   repositories {
     google {
       content {
@@ -31,10 +30,7 @@ pluginManagement {
     mavenCentral()
   }
   plugins {
-    // TODO Replace with version catalogs once plugins are supported ready
     id "com.gradle.enterprise" version "3.6.3"
-    id "com.android.application" version "7.1.2"
-    id "org.jetbrains.kotlin.android" version "1.6.10"
   }
 }
 
@@ -43,10 +39,16 @@ dependencyResolutionManagement {
   repositories {
     google()
     mavenCentral()
+    maven {
+      url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+    }
+    maven {
+      url = uri("https://jitpack.io")
+    }
   }
 }
 
 rootProject.name = "lynket"
-//include ":lynket"
-//include ":disk-cache"
-include ":lynket-playground"
+include ":lynket"
+include ":disk-cache"
+//include ":lynket-playground"

@@ -28,6 +28,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import arun.com.chromer.R
+import arun.com.chromer.databinding.ActivityTipsBinding
+import arun.com.chromer.databinding.LayoutTipsCardBinding
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.extenstions.inflate
 import arun.com.chromer.shared.base.activity.BaseActivity
@@ -35,12 +37,11 @@ import arun.com.chromer.util.Utils
 import com.bumptech.glide.RequestManager
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.activity_tips.*
-import kotlinx.android.synthetic.main.layout_tips_card.*
 import javax.inject.Inject
 
 class TipsActivity : BaseActivity() {
+
+  private lateinit var binding: ActivityTipsBinding
 
   override fun inject(activityComponent: ActivityComponent) = activityComponent.inject(this)
 
@@ -51,6 +52,8 @@ class TipsActivity : BaseActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    binding = ActivityTipsBinding.inflate(layoutInflater)
+    setContentView(binding.root)
     setupToolbar()
     setupTipsList()
   }
@@ -67,7 +70,7 @@ class TipsActivity : BaseActivity() {
 
   private fun setupToolbar() {
     setTitle(R.string.tips)
-    setSupportActionBar(toolbar)
+    setSupportActionBar(binding.toolbar)
     supportActionBar?.apply {
       setDisplayHomeAsUpEnabled(true)
       setHomeAsUpIndicator(R.drawable.article_ic_close)
@@ -75,9 +78,9 @@ class TipsActivity : BaseActivity() {
   }
 
   private fun setupTipsList() {
-    tips_recycler_view.layoutManager = LinearLayoutManager(this)
-    tips_recycler_view.setHasFixedSize(true)
-    tips_recycler_view.adapter = TipsRecyclerViewAdapter()
+    binding.tipsRecyclerView.layoutManager = LinearLayoutManager(this)
+    binding.tipsRecyclerView.setHasFixedSize(true)
+    binding.tipsRecyclerView.adapter = TipsRecyclerViewAdapter()
   }
 
   inner class TipsRecyclerViewAdapter : RecyclerView.Adapter<TipsItemHolder>() {
@@ -108,10 +111,10 @@ class TipsActivity : BaseActivity() {
     override fun onBindViewHolder(holder: TipsItemHolder, position: Int) {
       when (items[position]) {
         provider -> {
-          holder.title.setText(R.string.choose_provider)
-          holder.subtitle?.setText(R.string.choose_provider_tip)
-          requestManager.load(R.drawable.tips_providers).into(holder.image)
-          holder.icon.setImageDrawable(
+          holder.binding.title.setText(R.string.choose_provider)
+          holder.binding.subtitle.setText(R.string.choose_provider_tip)
+          requestManager.load(R.drawable.tips_providers).into(holder.binding.image)
+          holder.binding.icon.setImageDrawable(
             IconicsDrawable(this@TipsActivity)
               .icon(CommunityMaterial.Icon.cmd_cards)
               .colorRes(R.color.accent)
@@ -119,10 +122,10 @@ class TipsActivity : BaseActivity() {
           )
         }
         secBrowser -> {
-          holder.title?.setText(R.string.choose_secondary_browser)
-          holder.subtitle?.setText(R.string.tips_secondary_browser)
-          requestManager.load(R.drawable.tip_secondary_browser).into(holder.image)
-          holder.icon?.setImageDrawable(
+          holder.binding.title.setText(R.string.choose_secondary_browser)
+          holder.binding.subtitle.setText(R.string.tips_secondary_browser)
+          requestManager.load(R.drawable.tip_secondary_browser).into(holder.binding.image)
+          holder.binding.icon.setImageDrawable(
             IconicsDrawable(this@TipsActivity)
               .icon(CommunityMaterial.Icon.cmd_earth)
               .colorRes(R.color.accent)
@@ -130,10 +133,10 @@ class TipsActivity : BaseActivity() {
           )
         }
         perApp -> {
-          holder.title.setText(R.string.per_app_settings)
-          holder.subtitle.setText(R.string.per_app_settings_explanation)
-          requestManager.load(R.drawable.tips_per_app_settings).into(holder.image!!)
-          holder.icon.setImageDrawable(
+          holder.binding.title.setText(R.string.per_app_settings)
+          holder.binding.subtitle.setText(R.string.per_app_settings_explanation)
+          requestManager.load(R.drawable.tips_per_app_settings).into(holder.binding.image)
+          holder.binding.icon.setImageDrawable(
             IconicsDrawable(this@TipsActivity)
               .icon(CommunityMaterial.Icon.cmd_apps)
               .colorRes(R.color.accent)
@@ -141,10 +144,10 @@ class TipsActivity : BaseActivity() {
           )
         }
         bottomBar -> {
-          holder.title.setText(R.string.bottom_bar)
-          holder.subtitle.setText(R.string.tips_bottom_bar)
-          requestManager.load(R.drawable.tips_bottom_bar).into(holder.image!!)
-          holder.icon.setImageDrawable(
+          holder.binding.title.setText(R.string.bottom_bar)
+          holder.binding.subtitle.setText(R.string.tips_bottom_bar)
+          requestManager.load(R.drawable.tips_bottom_bar).into(holder.binding.image)
+          holder.binding.icon.setImageDrawable(
             IconicsDrawable(this@TipsActivity)
               .icon(CommunityMaterial.Icon.cmd_drag_horizontal)
               .colorRes(R.color.accent)
@@ -152,10 +155,10 @@ class TipsActivity : BaseActivity() {
           )
         }
         articleKeywords -> {
-          holder.title?.setText(R.string.article_mode)
-          holder.subtitle?.setText(R.string.tips_article_mode)
-          requestManager.load(R.drawable.tips_article_keywords).into(holder.image!!)
-          holder.icon.setImageDrawable(
+          holder.binding.title.setText(R.string.article_mode)
+          holder.binding.subtitle.setText(R.string.tips_article_mode)
+          requestManager.load(R.drawable.tips_article_keywords).into(holder.binding.image)
+          holder.binding.icon.setImageDrawable(
             IconicsDrawable(this@TipsActivity)
               .icon(CommunityMaterial.Icon.cmd_file_document)
               .colorRes(R.color.accent)
@@ -163,10 +166,10 @@ class TipsActivity : BaseActivity() {
           )
         }
         quicksettings -> {
-          holder.title?.setText(R.string.quick_settings)
-          holder.subtitle?.setText(R.string.quick_settings_tip)
-          requestManager.load(R.drawable.tips_quick_settings).into(holder.image!!)
-          holder.icon.setImageDrawable(
+          holder.binding.title.setText(R.string.quick_settings)
+          holder.binding.subtitle.setText(R.string.quick_settings_tip)
+          requestManager.load(R.drawable.tips_quick_settings).into(holder.binding.image)
+          holder.binding.icon.setImageDrawable(
             IconicsDrawable(this@TipsActivity)
               .icon(CommunityMaterial.Icon.cmd_settings)
               .colorRes(R.color.accent)
@@ -179,9 +182,15 @@ class TipsActivity : BaseActivity() {
     override fun onCreateViewHolder(
       parent: ViewGroup,
       viewType: Int
-    ) = TipsItemHolder(parent.inflate(R.layout.layout_tips_card))
+    ): TipsItemHolder {
+      val binding = LayoutTipsCardBinding.inflate(
+        parent.context.getSystemService(android.view.LayoutInflater::class.java),
+        parent,
+        false
+      )
+      return TipsItemHolder(binding)
+    }
   }
 
-  class TipsItemHolder(override val containerView: View) : RecyclerView.ViewHolder(containerView),
-    LayoutContainer
+  class TipsItemHolder(val binding: LayoutTipsCardBinding) : RecyclerView.ViewHolder(binding.root)
 }

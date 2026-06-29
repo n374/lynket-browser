@@ -41,7 +41,9 @@
 
   </com.google.android.material.appbar.AppBarLayout>
 
-  <include layout="@layout/activity_per_apps_content" />
+  <include
+    android:id="@+id/activityPerAppsContent"
+    layout="@layout/activity_per_apps_content" />
 
   <!--<com.google.android.material.floatingactionbutton.FloatingActionButton
       android:id="@+id/fab"

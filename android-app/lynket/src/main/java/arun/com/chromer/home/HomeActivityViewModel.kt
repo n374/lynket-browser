@@ -36,17 +36,31 @@ import arun.com.chromer.settings.RxPreferences
 import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.glide.appicon.ApplicationIcon
 import com.jakewharton.rxrelay2.PublishRelay
-import dev.arunkumar.android.result.asResource
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.arunkumar.android.rxschedulers.SchedulerProvider
-import dev.arunkumar.common.result.Resource
+import dev.arunkumar.android.rxschedulers.asResource
+import dev.arunkumar.android.rxschedulers.compose
+import dev.arunkumar.android.rxschedulers.ioToUi
+import dev.arunkumar.android.rxschedulers.poolToUi
+import dev.arunkumar.android.common.Resource
 import io.reactivex.Observable
 import javax.inject.Inject
 
+/**
+ * Legacy ViewModel for HomeActivity (XML-based UI).
+ *
+ * Migrated to Hilt: Uses @HiltViewModel annotation for automatic ViewModel injection.
+ * Retains RxJava 2.x for now (will be migrated to Flows in future phase).
+ *
+ * Note: Modern Compose UI uses ModernHomeViewModel instead.
+ */
 @SuppressLint("CheckResource")
+@HiltViewModel
 class HomeActivityViewModel
 @Inject
 constructor(
-  private val application: Application,
+  @ApplicationContext private val application: Application,
   private val rxPreferences: RxPreferences,
   private val schedulerProvider: SchedulerProvider,
   private val historyRepository: HistoryRepository,
@@ -119,7 +133,7 @@ constructor(
           providerReason = StringResource(0)
         )
       }
-    }.compose(schedulerProvider.poolToUi())
+    }.compose(schedulerProvider.poolToUi<CustomTabProviderInfo>())
       .untilCleared()
       .subscribe(providerInfoLiveData::setValue)
   }

@@ -54,15 +54,8 @@ gradlePlugin {
   }
 }
 
-/*
 dependencies {
-  implementation(deps.gradle.dependency.updates)
-  implementation(deps.agp)
-  implementation(deps.kotlin)
-  implementation(deps.spotless)
-  implementation(deps.dokka)
-  implementation(deps.nexus.publish)
-  implementation(deps.kotlinx.binaryvalidator)
+  implementation("com.android.tools.build:gradle:8.3.0-alpha18")
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
   implementation("gradle.plugin.dev.arunkumar:scabbard-gradle-plugin:0.5.0")
 }
-*/

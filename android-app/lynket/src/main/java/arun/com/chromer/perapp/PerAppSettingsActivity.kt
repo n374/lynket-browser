@@ -33,6 +33,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import arun.com.chromer.R
+import arun.com.chromer.databinding.AcitivtyPerAppsBinding
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.extenstions.watch
 import arun.com.chromer.settings.Preferences
@@ -43,11 +44,10 @@ import arun.com.chromer.util.Utils
 import arun.com.chromer.util.viemodel.ViewModelFactory
 import com.afollestad.materialdialogs.MaterialDialog
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.acitivty_per_apps.*
-import kotlinx.android.synthetic.main.activity_per_apps_content.*
 import javax.inject.Inject
 
 class PerAppSettingsActivity : BaseActivity(), CompoundButton.OnCheckedChangeListener, Snackable {
+  private lateinit var binding: AcitivtyPerAppsBinding
   @Inject
   lateinit var preferences: Preferences
 
@@ -68,15 +68,18 @@ class PerAppSettingsActivity : BaseActivity(), CompoundButton.OnCheckedChangeLis
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    binding = AcitivtyPerAppsBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+
     setupToolbar()
     setupList()
     observeViewModel()
   }
 
   private fun setupList() {
-    appRecyclerView.layoutManager = LinearLayoutManager(this)
-    appRecyclerView.adapter = perAppListAdapter
-    (appRecyclerView.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+    binding.activityPerAppsContent.appRecyclerView.layoutManager = LinearLayoutManager(this)
+    binding.activityPerAppsContent.appRecyclerView.adapter = perAppListAdapter
+    (binding.activityPerAppsContent.appRecyclerView.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
   }
 
 
@@ -112,10 +115,10 @@ class PerAppSettingsActivity : BaseActivity(), CompoundButton.OnCheckedChangeLis
   }
 
   private fun setupToolbar() {
-    setSupportActionBar(toolbar)
+    setSupportActionBar(binding.toolbar)
     supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
-    swipeRefreshLayout.apply {
+    binding.activityPerAppsContent.swipeRefreshLayout.apply {
       setColorSchemeResources(
         R.color.colorPrimary,
         R.color.colorAccent
@@ -130,7 +133,7 @@ class PerAppSettingsActivity : BaseActivity(), CompoundButton.OnCheckedChangeLis
     menuInflater.inflate(R.menu.per_apps_menu, menu)
     val menuItem = menu.findItem(R.id.blacklist_switch_item)
     if (menuItem != null) {
-      val blackListSwitch = menuItem.actionView.findViewById<SwitchCompat>(R.id.blacklist_switch)
+      val blackListSwitch = menuItem.actionView?.findViewById<SwitchCompat>(R.id.blacklist_switch)
       if (blackListSwitch != null) {
         val blackListActive = preferences.perAppSettings() && Utils.canReadUsageStats(this)
         preferences.perAppSettings(blackListActive)
@@ -175,14 +178,14 @@ class PerAppSettingsActivity : BaseActivity(), CompoundButton.OnCheckedChangeLis
   }
 
   private fun loading(loading: Boolean) {
-    swipeRefreshLayout.isRefreshing = loading
+    binding.activityPerAppsContent.swipeRefreshLayout.isRefreshing = loading
   }
 
   override fun snack(message: String) {
-    Snackbar.make(coordinatorLayout, message, Snackbar.LENGTH_SHORT).show()
+    Snackbar.make(binding.coordinatorLayout, message, Snackbar.LENGTH_SHORT).show()
   }
 
   override fun snackLong(message: String) {
-    Snackbar.make(coordinatorLayout, message, Snackbar.LENGTH_LONG).show()
+    Snackbar.make(binding.coordinatorLayout, message, Snackbar.LENGTH_LONG).show()
   }
 }

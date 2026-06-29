@@ -56,7 +56,9 @@
 
   </com.google.android.material.appbar.AppBarLayout>
 
-  <include layout="@layout/activity_web_view_content" />
+  <include
+    android:id="@+id/activityWebViewContent"
+    layout="@layout/activity_web_view_content" />
 
   <com.google.android.material.bottomnavigation.BottomNavigationView
     android:id="@+id/bottomNavigation"

@@ -27,6 +27,7 @@ import arun.com.chromer.util.lifecycle.ActivityLifecycle
 import arun.com.chromer.util.lifecycle.LifecycleEvents
 import dev.arunkumar.android.dagger.activity.PerActivity
 import dev.arunkumar.android.rxschedulers.SchedulerProvider
+import dev.arunkumar.android.rxschedulers.poolToUi
 import hu.akarnokd.rxjava.interop.RxJavaInterop.toV2Observable
 import hu.akarnokd.rxjava.interop.RxJavaInterop.toV2Single
 import io.reactivex.Observable

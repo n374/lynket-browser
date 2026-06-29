@@ -28,7 +28,7 @@ import org.gradle.kotlin.dsl.getByType
 
 internal val Project.catalogs get() = extensions.getByType<VersionCatalogsExtension>()
 
-internal val Project.deps: VersionCatalog get() = catalogs.named("deps")
+internal val Project.deps: VersionCatalog get() = catalogs.named("libs")
 
 internal fun VersionCatalog.version(reference: String): String? = findVersion(reference)
   .orElse(null)

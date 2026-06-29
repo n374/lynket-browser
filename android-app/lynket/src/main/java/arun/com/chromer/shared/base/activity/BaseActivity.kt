@@ -45,7 +45,7 @@ abstract class BaseActivity : AppCompatActivity(), ProvidesActivityComponent {
   protected abstract val layoutRes: Int
 
   @Inject
-  protected lateinit var lifecycleEvents: ActivityLifecycleEvents
+  lateinit var lifecycleEvents: ActivityLifecycleEvents
 
   override fun onCreate(savedInstanceState: Bundle?) {
     activityComponent = application

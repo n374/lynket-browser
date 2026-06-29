@@ -23,7 +23,9 @@ package arun.com.chromer.home.fragment
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.GridLayoutManager
@@ -31,6 +33,7 @@ import arun.com.chromer.R
 import arun.com.chromer.browsing.providerselection.ProviderSelectionActivity
 import arun.com.chromer.data.Result
 import arun.com.chromer.data.website.model.Website
+import arun.com.chromer.databinding.FragmentHomeBinding
 import arun.com.chromer.di.fragment.FragmentComponent
 import arun.com.chromer.extenstions.appName
 import arun.com.chromer.extenstions.gone
@@ -46,17 +49,16 @@ import arun.com.chromer.util.HtmlCompat
 import arun.com.chromer.util.RxEventBus
 import arun.com.chromer.util.glide.GlideApp
 import arun.com.chromer.util.glide.appicon.ApplicationIcon
-import butterknife.OnClick
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
-import kotlinx.android.synthetic.main.fragment_home.*
-import kotlinx.android.synthetic.main.layout_provider_info_card.*
 import javax.inject.Inject
 
 /**
  * Created by Arunkumar on 07-04-2017.
  */
 class HomeFragment : BaseFragment(), Snackable {
+  private var _binding: FragmentHomeBinding? = null
+  private val binding get() = _binding!!
   @Inject
   lateinit var recentsAdapter: RecentsAdapter
 
@@ -74,6 +76,22 @@ class HomeFragment : BaseFragment(), Snackable {
   override fun inject(fragmentComponent: FragmentComponent) = fragmentComponent.inject(this)
 
   override val layoutRes: Int get() = R.layout.fragment_home
+
+  override fun onCreateView(
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
+  ): View {
+    _binding = FragmentHomeBinding.inflate(inflater, container, false)
+    return super.onCreateView(inflater, container, savedInstanceState).also {
+      return binding.root
+    }
+  }
+
+  override fun onDestroyView() {
+    super.onDestroyView()
+    _binding = null
+  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
@@ -117,9 +135,9 @@ class HomeFragment : BaseFragment(), Snackable {
   private fun setRecents(websites: List<Website>) {
     recentsAdapter.setWebsites(websites)
     if (websites.isEmpty()) {
-      recent_missing_text.show()
+      binding.recentMissingText.show()
     } else {
-      recent_missing_text.gone()
+      binding.recentMissingText.gone()
     }
   }
 
@@ -132,13 +150,13 @@ class HomeFragment : BaseFragment(), Snackable {
   }
 
   private fun setupRecents() {
-    recentsHeaderIcon.setImageDrawable(
+    binding.recentsHeaderIcon.setImageDrawable(
       IconicsDrawable(context!!)
         .icon(CommunityMaterial.Icon.cmd_history)
         .colorRes(R.color.accent)
         .sizeDp(24)
     )
-    recentsList.apply {
+    binding.recentsList.apply {
       layoutManager = GridLayoutManager(activity, 4)
       adapter = recentsAdapter
     }
@@ -160,50 +178,16 @@ class HomeFragment : BaseFragment(), Snackable {
   }
 
 
+  // Provider card moved to Epoxy model in HomeActivity (ProviderInfoModel)
+  // Keeping method for compatibility but it's no longer used
   private fun setupProviderCard() {
-    if (isAdded && context != null) {
-      val customTabProvider: String? = preferences.customTabPackage()
-      val isIncognito = preferences.fullIncognitoMode()
-      val isWebView = preferences.useWebView()
-      if (customTabProvider == null || isIncognito || isWebView) {
-        providerDescription.text = HtmlCompat.fromHtml(
-          getString(
-            R.string.tab_provider_status_message_home,
-            getString(R.string.system_webview)
-          )
-        )
-        GlideApp.with(this)
-          .load(ApplicationIcon.createUri(Constants.SYSTEM_WEBVIEW))
-          .error(
-            IconicsDrawable(context!!)
-              .icon(CommunityMaterial.Icon.cmd_web)
-              .colorRes(R.color.primary)
-              .sizeDp(24)
-          )
-          .into(providerIcon)
-        if (isIncognito) {
-          providerReason.show()
-          providerChangeButton.gone()
-        } else {
-          providerReason.gone()
-          providerChangeButton.show()
-        }
-      } else {
-        providerReason.gone()
-        providerChangeButton.show()
-        val appName = context!!.appName(customTabProvider)
-        providerDescription.text =
-          HtmlCompat.fromHtml(getString(R.string.tab_provider_status_message_home, appName))
-        GlideApp.with(this)
-          .load(ApplicationIcon.createUri(customTabProvider))
-          .into(providerIcon)
-      }
-    }
+    // No-op: Provider card views removed from fragment_home.xml
+    // Provider info now displayed via HomeFeedController in HomeActivity
   }
 
 
   private fun setupTipsCard() {
-    tipsIcon.setImageDrawable(
+    binding.tipsIcon.setImageDrawable(
       IconicsDrawable(context!!)
         .icon(CommunityMaterial.Icon.cmd_lightbulb_on)
         .colorRes(R.color.md_yellow_700)
@@ -212,22 +196,16 @@ class HomeFragment : BaseFragment(), Snackable {
   }
 
   private fun setupEventListeners() {
+    // Provider change button removed - now handled in HomeActivity
+
+    binding.tipsButton.setOnClickListener {
+      Handler().postDelayed({
+        startActivity(Intent(context, TipsActivity::class.java))
+      }, 200)
+    }
+
     subs.add(rxEventBus
       .filteredEvents<BrowsingOptionsActivity.ProviderChanged>()
       .subscribe { setupProviderCard() })
-  }
-
-  @OnClick(R.id.providerChangeButton)
-  fun onProviderChangeClicked() {
-    Handler().postDelayed({
-      startActivity(Intent(context, ProviderSelectionActivity::class.java))
-    }, 200)
-  }
-
-  @OnClick(R.id.tipsButton)
-  fun onTipsClicked() {
-    Handler().postDelayed({
-      startActivity(Intent(context, TipsActivity::class.java))
-    }, 200)
   }
 }

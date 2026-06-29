@@ -25,13 +25,21 @@ import androidx.lifecycle.ViewModel
 import arun.com.chromer.data.Result
 import arun.com.chromer.data.history.HistoryRepository
 import arun.com.chromer.data.website.model.Website
+import dagger.hilt.android.lifecycle.HiltViewModel
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
 import javax.inject.Inject
 
 /**
- * Created by arunk on 14-01-2018.
+ * Legacy ViewModel for HomeFragment (XML-based UI).
+ *
+ * Migrated to Hilt: Uses @HiltViewModel annotation for automatic ViewModel injection.
+ * Retains RxJava 1.x for now (will be migrated to Flows in future phase).
+ *
+ * Note: Modern Compose UI uses ModernHomeViewModel instead.
+ * Most functionality is commented out but retained for backward compatibility.
  */
+@HiltViewModel
 class HomeFragmentViewModel
 @Inject
 constructor(
