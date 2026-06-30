@@ -23,7 +23,10 @@ package arun.com.chromer.home
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.postDelayed
+import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -91,6 +94,7 @@ class HomeActivity : BaseActivity(), Snackable {
     super.onCreate(savedInstanceState)
     binding = ActivityMainBinding.inflate(layoutInflater)
     setContentView(binding.root)
+    applyWindowInsets()
 
     if (Preferences.get(this).isFirstRun) {
       startActivity(Intent(this, ChromerIntroActivity::class.java))
@@ -102,6 +106,23 @@ class HomeActivity : BaseActivity(), Snackable {
     setupSearchBar()
     setupFeed()
     setupEventListeners()
+  }
+
+  /**
+   * Apply system-bar insets as padding so the header (with the settings/tips icons) and the bottom
+   * search bar are not drawn under the status/navigation bars. Under targetSdk 35 the system forces
+   * edge-to-edge on Android 15+ (API 35+); without this the header overlaps the status bar and the
+   * top-right settings gear becomes untappable. On older versions the dispatched insets are 0, so
+   * this is a no-op there.
+   */
+  private fun applyWindowInsets() {
+    ViewCompat.setOnApplyWindowInsetsListener(binding.coordinatorLayout) { view, insets ->
+      val bars = insets.getInsets(
+        WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+      )
+      view.updatePadding(top = bars.top, bottom = bars.bottom, left = bars.left, right = bars.right)
+      insets
+    }
   }
 
   override fun snack(textToSnack: String) {
