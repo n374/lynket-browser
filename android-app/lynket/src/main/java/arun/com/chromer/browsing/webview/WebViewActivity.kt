@@ -58,31 +58,25 @@ open class WebViewActivity : BrowsingActivity() {
   private var fgColorStateList: ColorStateList = ColorStateList.valueOf(0)
   private var foregroundColor = 0
 
-  // BrowsingActivity.onCreate() (super) starts observing the toolbar-color LiveData, which can
-  // deliver a value synchronously — i.e. onToolbarColorSet()/setAppBarColor() may run BEFORE this
-  // Activity's `binding` is inflated below. We stash that early color here and apply it once the
-  // views exist, instead of crashing with UninitializedPropertyAccessException on `binding`.
-  private var pendingAppBarColor: Int? = null
-
   override val layoutRes: Int = 0 // Using ViewBinding instead
 
   override fun inject(activityComponent: ActivityComponent) = activityComponent.inject(this)
 
   override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
+    // Inflate `binding` BEFORE super.onCreate(). BrowsingActivity.onCreate() starts observing
+    // ViewModel LiveData that deliver their current value synchronously, which immediately invokes
+    // our overrides (onWebsiteLoaded -> setToolbarTitle, onToolbarColorSet -> setAppBarColor, ...).
+    // Those touch `binding`, so it must already exist or we crash with
+    // UninitializedPropertyAccessException. The views are usable once inflated, even before
+    // setContentView() attaches them.
     binding = ActivityWebViewBinding.inflate(layoutInflater)
+    super.onCreate(savedInstanceState)
     setContentView(binding.root)
 
     setupToolbar()
     setupSwipeRefresh()
     setupWebView(savedInstanceState)
     setupBottomBar()
-    // Apply any toolbar color the ViewModel observer emitted during super.onCreate(), before
-    // `binding` existed (see setAppBarColor's guard).
-    pendingAppBarColor?.let {
-      pendingAppBarColor = null
-      setAppBarColor(it)
-    }
   }
 
   override fun getCurrentUrl(): String {
@@ -208,11 +202,6 @@ open class WebViewActivity : BrowsingActivity() {
   }
 
   private fun setAppBarColor(themeColor: Int) {
-    if (!::binding.isInitialized) {
-      // Color arrived before onCreate() inflated the views; defer it (applied at end of onCreate).
-      pendingAppBarColor = themeColor
-      return
-    }
     this.themeColor = themeColor
     foregroundColor = ColorUtil.getForegroundWhiteOrBlack(themeColor)
     fgColorStateList = ColorStateList.valueOf(foregroundColor)
