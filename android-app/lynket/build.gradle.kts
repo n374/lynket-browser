@@ -183,6 +183,10 @@ dependencies {
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
+    // androidx.test:core provides ApplicationProvider used by the Robolectric test suite; the
+    // modernization dropped it from the test classpath, breaking unit-test compilation.
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("androidx.test:core-ktx:1.5.0")
     testImplementation(libs.mockk)
     testImplementation(libs.truth)
     testImplementation(libs.kotlinx.coroutines.test)

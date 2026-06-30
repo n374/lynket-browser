@@ -58,6 +58,12 @@ open class WebViewActivity : BrowsingActivity() {
   private var fgColorStateList: ColorStateList = ColorStateList.valueOf(0)
   private var foregroundColor = 0
 
+  // BrowsingActivity.onCreate() (super) starts observing the toolbar-color LiveData, which can
+  // deliver a value synchronously — i.e. onToolbarColorSet()/setAppBarColor() may run BEFORE this
+  // Activity's `binding` is inflated below. We stash that early color here and apply it once the
+  // views exist, instead of crashing with UninitializedPropertyAccessException on `binding`.
+  private var pendingAppBarColor: Int? = null
+
   override val layoutRes: Int = 0 // Using ViewBinding instead
 
   override fun inject(activityComponent: ActivityComponent) = activityComponent.inject(this)
@@ -71,6 +77,12 @@ open class WebViewActivity : BrowsingActivity() {
     setupSwipeRefresh()
     setupWebView(savedInstanceState)
     setupBottomBar()
+    // Apply any toolbar color the ViewModel observer emitted during super.onCreate(), before
+    // `binding` existed (see setAppBarColor's guard).
+    pendingAppBarColor?.let {
+      pendingAppBarColor = null
+      setAppBarColor(it)
+    }
   }
 
   override fun getCurrentUrl(): String {
@@ -167,7 +179,7 @@ open class WebViewActivity : BrowsingActivity() {
             setLoadingProgress(newProgress)
           }
         }
-        settings.javaScriptEnabled = true
+        WebViewConfigurator.configure(settings)
         val previousUrl = savedInstanceState?.getString(EXTRA_CURRENT_LOADING_URL)
         if (previousUrl == null) {
           loadUrl(intent.dataString!!)
@@ -196,6 +208,11 @@ open class WebViewActivity : BrowsingActivity() {
   }
 
   private fun setAppBarColor(themeColor: Int) {
+    if (!::binding.isInitialized) {
+      // Color arrived before onCreate() inflated the views; defer it (applied at end of onCreate).
+      pendingAppBarColor = themeColor
+      return
+    }
     this.themeColor = themeColor
     foregroundColor = ColorUtil.getForegroundWhiteOrBlack(themeColor)
     fgColorStateList = ColorStateList.valueOf(foregroundColor)

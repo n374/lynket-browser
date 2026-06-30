@@ -21,13 +21,30 @@ package arun.com.chromer.di.app;
 
 import android.app.Application;
 
+import javax.inject.Singleton;
+
 import arun.com.chromer.di.viewmodel.ViewModelModule;
 import dagger.Module;
+import dagger.Provides;
 
+/**
+ * Test variant of {@link AppModule}. After the modernization, {@link AppModule} no longer takes an
+ * {@code Application} in its constructor (the production graph @BindsInstance's it via the component
+ * factory). The test graph is built via this module, so it both inherits AppModule's @Provides
+ * bindings and supplies the {@code Application} instance the rest of the graph depends on.
+ */
 @Module(includes = ViewModelModule.class)
 public class TestAppModule extends AppModule {
 
+  private final Application application;
+
   public TestAppModule(Application application) {
-    super(application);
+    this.application = application;
+  }
+
+  @Provides
+  @Singleton
+  Application application() {
+    return application;
   }
 }
