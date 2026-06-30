@@ -97,6 +97,7 @@ import arun.com.chromer.di.service.ServiceComponent;
 import arun.com.chromer.settings.Preferences;
 import arun.com.chromer.shared.Constants;
 import arun.com.chromer.tabs.TabsManager;
+import arun.com.chromer.util.BroadcastReceivers;
 import arun.com.chromer.util.RxSchedulerUtils;
 import arun.com.chromer.util.Utils;
 import rx.Observable;
@@ -585,8 +586,8 @@ public class WebHeadService extends OverlayService implements WebHeadContract,
     // so the receiver must be RECEIVER_NOT_EXPORTED. On Android 13+ (API 33+) registering a receiver
     // for non-system broadcasts without specifying exported-ness throws SecurityException, which
     // under targetSdk 35 crashed WebHeadService on creation and broke Bubble mode entirely.
-    ContextCompat.registerReceiver(
-        this, notificationActionReceiver, notificationFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
+    // Registration goes through the unit-tested BroadcastReceivers helper.
+    BroadcastReceivers.registerNotExported(this, notificationActionReceiver, notificationFilter);
   }
 
   private void unregisterReceivers() {
