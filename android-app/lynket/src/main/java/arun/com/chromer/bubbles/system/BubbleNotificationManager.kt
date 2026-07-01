@@ -225,27 +225,31 @@ constructor(
   }.doOnError(Timber::e).onErrorReturnItem(bubbleData)
 
 
-  private fun BubbleLoadData.bubbleColor(): Int =
-    if (color != Constants.NO_COLOR) color else application.getColor(R.color.primary)
-
-  // Always an adaptive bitmap. Android 14+/16 require bubble (and the backing conversation
-  // shortcut) icons to be TYPE_URI / TYPE_ADAPTIVE_BITMAP; a TYPE_RESOURCE icon makes the platform
-  // reject the bubble, so on a fresh open (no favicon yet) nothing was showing. Fall back to a
-  // solid app-colored adaptive bitmap instead of Icon.createWithResource(...).
-  private fun BubbleLoadData.fallbackIcon(): Icon {
+  private fun BubbleLoadData.fallbackIcon(): Icon = if (color != Constants.NO_COLOR) {
     val iconSize = 108.dpToPx()
-    return Icon.createWithAdaptiveBitmap(
-      ColorDrawable(bubbleColor()).toBitmap(width = iconSize, height = iconSize)
+    Icon.createWithAdaptiveBitmap(
+      ColorDrawable(color).toBitmap(
+        width = iconSize,
+        height = iconSize
+      )
     )
+  } else {
+    Icon.createWithResource(application, R.mipmap.ic_launcher)
   }
 
   /** [IconCompat] counterpart of [fallbackIcon] used for the sharing shortcut on API 30+. */
-  private fun BubbleLoadData.bubbleIconCompat(): IconCompat {
-    icon?.let { return IconCompat.createWithAdaptiveBitmap(it) }
-    val iconSize = 108.dpToPx()
-    return IconCompat.createWithAdaptiveBitmap(
-      ColorDrawable(bubbleColor()).toBitmap(width = iconSize, height = iconSize)
-    )
-  }
+  private fun BubbleLoadData.bubbleIconCompat(): IconCompat = icon
+    ?.let(IconCompat::createWithAdaptiveBitmap)
+    ?: if (color != Constants.NO_COLOR) {
+      val iconSize = 108.dpToPx()
+      IconCompat.createWithAdaptiveBitmap(
+        ColorDrawable(color).toBitmap(
+          width = iconSize,
+          height = iconSize
+        )
+      )
+    } else {
+      IconCompat.createWithResource(application, R.mipmap.ic_launcher)
+    }
 }
 
