@@ -26,7 +26,7 @@ android {
     defaultConfig {
         applicationId = "arun.com.chromer"
         minSdk = 24 // Android 7.0+ (Decision: Bump from 23)
-        targetSdk = 35 // Phase 1.1: Updated to latest
+        targetSdk = 29 // Native bubbles auto-float only at targetSdk<=30 (see build/apk CI APK); 35 broke them
         versionCode = 56
         versionName = "2.1.3"
 
