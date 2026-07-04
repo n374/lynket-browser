@@ -15,7 +15,7 @@
 | 架构 | architecture/ | 待建 | 总览、模块、数据流、技术选型 |
 | 接口契约 | api/ | 待建 | 浏览器无对外服务接口，按需补 |
 | 运维 SOP | operations/ | 待建 | 客户端 App，按需补 |
-| 决策记录 | decisions/ | 待建 | ADR |
+| 决策记录 | [decisions/](./decisions/) | ✅ | ADR（[ADR-0001](./decisions/0001-native-bubbles-require-targetsdk-30.md)：原生气泡 vs targetSdk） |
 | 归档 | archive/ | 待建 | 已完成 change |
 
 ## 文档规约
