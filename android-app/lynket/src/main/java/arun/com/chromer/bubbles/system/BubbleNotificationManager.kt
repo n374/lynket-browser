@@ -132,10 +132,21 @@ constructor(
       ?.let(Icon::createWithAdaptiveBitmap)
       ?: bubbleData.fallbackIcon()
 
-    val displayHeight = (application.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
-      .defaultDisplay
-      .let { display -> Point().apply(display::getSize).y }
-    val desiredHeight = Utils.pxToDp((displayHeight * 0.8).toInt())
+    // Use the full display height so SystemUI clamps the expanded bubble to the true
+    // maximum available height, giving a stable expanded size. The previous
+    // `0.8 * defaultDisplay.getSize()` produced an unstable *sub-max* value: getSize()
+    // is deprecated and, read from a non-UI application context, returns an
+    // insets-dependent height, which drifted downward on repeated expand/collapse (the
+    // bubble got shorter on each reopen). getCurrentWindowMetrics() / getRealSize()
+    // give a stable full-display height, and passing the max leaves no room to drift.
+    val windowManager = application.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    @Suppress("DEPRECATION")
+    val displayHeight = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      windowManager.currentWindowMetrics.bounds.height()
+    } else {
+      Point().apply(windowManager.defaultDisplay::getRealSize).y
+    }
+    val desiredHeight = Utils.pxToDp(displayHeight)
 
     // From Android 11 (API 30) a notification only surfaces as a bubble when it
     // references a *published* long-lived sharing shortcut. Without it the platform
