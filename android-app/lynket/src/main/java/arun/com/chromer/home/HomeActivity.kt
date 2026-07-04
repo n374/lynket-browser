@@ -98,6 +98,25 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
     setupSearchBar()
     setupFeed()
     setupEventListeners()
+
+    requestPostNotificationsIfNeeded()
+  }
+
+  /**
+   * Spike RAS-38: on Android 13+ (targetSdk 33+) notifications — and therefore bubbles —
+   * are blocked until the user grants POST_NOTIFICATIONS at runtime. We request it once on
+   * first launch of the home screen. The permission string is used as a literal because the
+   * Manifest.permission.POST_NOTIFICATIONS constant only exists from compileSdk 33 and we
+   * compile against 31 (see Constants.ANDROID_TARGET_SDK note).
+   */
+  private fun requestPostNotificationsIfNeeded() {
+    if (android.os.Build.VERSION.SDK_INT < 33) return
+    val permission = "android.permission.POST_NOTIFICATIONS"
+    val granted = androidx.core.content.ContextCompat.checkSelfPermission(this, permission) ==
+      android.content.pm.PackageManager.PERMISSION_GRANTED
+    if (!granted) {
+      androidx.core.app.ActivityCompat.requestPermissions(this, arrayOf(permission), 42)
+    }
   }
 
   override fun snack(textToSnack: String) {

@@ -35,7 +35,12 @@
  */
 public const val ANDROID_COMPILE_SDK: Int = 31
 public const val ANDROID_MIN_SDK: Int = 23
-public const val ANDROID_TARGET_SDK: Int = 29
+// Spike RAS-38: target the high SDK where the platform "conversation framework" gate
+// applies (targetSdk >= R). We keep compileSdk at 31 because AGP 7.1.2 cannot compile
+// against API 35 (that needs AGP 8.6+/JDK 17); targetSdk is what the OS behavior gates
+// (isConversation, POST_NOTIFICATIONS enforcement) actually read from the merged manifest.
+// APIs newer than 31 are referenced by string literal + Build.VERSION.SDK_INT guards only.
+public const val ANDROID_TARGET_SDK: Int = 35
 
 public const val ANDROID_PACKAGE_NAME: String = "arun.com.chromer"
 public const val ANDROID_RELEASE_VARIANT: String = "release"

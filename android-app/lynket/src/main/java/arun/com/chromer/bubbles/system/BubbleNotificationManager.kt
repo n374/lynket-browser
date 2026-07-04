@@ -151,7 +151,12 @@ constructor(
         .setIntent(viewIntent)
         .setPerson(
           PersonCompat.Builder()
-            .setBot(true)
+            // Spike RAS-38 (conversation gate): on targetSdk >= R the platform's
+            // BubbleExtractor requires record.isConversation()==true, and
+            // NotificationRecord.isConversation() rejects a MessagingStyle notif whose
+            // shortcut person isOnlyBots(). setBot(true) here was exactly what made
+            // Lynket's bubble judged "non-conversation" and dropped. Must be non-bot.
+            .setBot(false)
             .setName(website.safeLabel())
             .setImportant(true)
             .build()
@@ -165,7 +170,10 @@ constructor(
       // Shortcut-backed metadata is the supported path on API 30+.
       Notification.BubbleMetadata.Builder(shortcutId)
         .setDesiredHeight(desiredHeight)
-        .setAutoExpandBubble(false)
+        // Spike RAS-38: auto-expand the bubble the moment it is posted. The platform only
+        // honors this when the posting app is in the foreground at post time — hence the
+        // invisible foreground host activity (BrowserInterceptActivity) that carries this call.
+        .setAutoExpandBubble(true)
         .setSuppressNotification(true)
         .build()
     } else {
@@ -175,7 +183,8 @@ constructor(
         .setIcon(bubbleIcon)
         .setIntent(bubbleIntent)
         .setDesiredHeight(desiredHeight)
-        .setAutoExpandBubble(false)
+        // Spike RAS-38: auto-expand at post time (foreground-gated), see R+ branch above.
+        .setAutoExpandBubble(true)
         .setSuppressNotification(true)
         .build()
     }
@@ -211,7 +220,9 @@ constructor(
       // https://developer.android.com/guide/topics/ui/bubbles#when_bubbles_appear
       setCategory(Notification.CATEGORY_CALL)
       style = Notification.MessagingStyle(addPerson {
-        setBot(true)
+        // Spike RAS-38: same conversation gate as the shortcut person above — the
+        // MessagingStyle "self" person must not be a bot or isConversation() returns false.
+        setBot(false)
         setIcon(bubbleIcon)
         setName(website.safeLabel())
         setImportant(true)
