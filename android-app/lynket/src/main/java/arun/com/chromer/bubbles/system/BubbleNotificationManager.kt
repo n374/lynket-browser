@@ -170,10 +170,10 @@ constructor(
       // Shortcut-backed metadata is the supported path on API 30+.
       Notification.BubbleMetadata.Builder(shortcutId)
         .setDesiredHeight(desiredHeight)
-        // Spike RAS-38: auto-expand the bubble the moment it is posted. The platform only
-        // honors this when the posting app is in the foreground at post time — hence the
-        // invisible foreground host activity (BrowserInterceptActivity) that carries this call.
-        .setAutoExpandBubble(true)
+        // Spike RAS-38 (per user request): keep the bubble COLLAPSED on arrival — it floats
+        // as a bubble icon and only expands when the user taps it. Auto-expand was tried and
+        // works (needs a foreground post), but the desired UX is tap-to-open, so keep false.
+        .setAutoExpandBubble(false)
         .setSuppressNotification(true)
         .build()
     } else {
@@ -183,8 +183,8 @@ constructor(
         .setIcon(bubbleIcon)
         .setIntent(bubbleIntent)
         .setDesiredHeight(desiredHeight)
-        // Spike RAS-38: auto-expand at post time (foreground-gated), see R+ branch above.
-        .setAutoExpandBubble(true)
+        // Spike RAS-38 (per user request): collapsed on arrival, tap-to-expand. See R+ branch.
+        .setAutoExpandBubble(false)
         .setSuppressNotification(true)
         .build()
     }

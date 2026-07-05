@@ -45,6 +45,38 @@
 
   <uses-sdk tools:overrideLibrary="in.arunkumarsampath.transitionx" />
 
+  <!--
+    Spike RAS-38 regression fix: bumping targetSdk 29 -> 35 turns on Android 11 (API 30)
+    package visibility filtering. Lynket's whole job is to enumerate and delegate to other
+    browsers / Custom Tabs providers (Utils.getCustomTabPackages, CustomTabs.getCustomTab
+    SupportingPackages, SecondaryBrowserReceiver, the provider picker in Settings). Without
+    an explicit <queries> those PackageManager.queryIntentActivities / resolveService calls
+    come back empty, so Settings shows no installed browsers to choose from. Declare exactly
+    the intents Lynket probes so those apps become visible again.
+  -->
+  <queries>
+    <!-- Web browsers / any app that can open http(s) links -->
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="https" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="http" />
+    </intent>
+    <!-- Chrome/other Custom Tabs providers (probed via resolveService) -->
+    <intent>
+      <action android:name="android.support.customtabs.action.CustomTabsService" />
+    </intent>
+    <!-- Share targets used by the intent picker sheet -->
+    <intent>
+      <action android:name="android.intent.action.SEND" />
+      <data android:mimeType="text/plain" />
+    </intent>
+  </queries>
+
   <application
     android:name=".Lynket"
     android:allowBackup="false"
