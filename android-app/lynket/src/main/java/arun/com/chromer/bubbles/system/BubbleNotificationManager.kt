@@ -132,17 +132,23 @@ constructor(
       ?.let(Icon::createWithAdaptiveBitmap)
       ?: bubbleData.fallbackIcon()
 
-    // Use the full display height so SystemUI clamps the expanded bubble to the true
-    // maximum available height, giving a stable expanded size. The previous
-    // `0.8 * defaultDisplay.getSize()` produced an unstable *sub-max* value: getSize()
-    // is deprecated and, read from a non-UI application context, returns an
-    // insets-dependent height, which drifted downward on repeated expand/collapse (the
-    // bubble got shorter on each reopen). getCurrentWindowMetrics() / getRealSize()
-    // give a stable full-display height, and passing the max leaves no room to drift.
+    // Derive the expanded-bubble height from the *maximum* window metrics, which are
+    // independent of the current window state. desiredHeight is baked into the bubble
+    // when the notification is (re)posted, so if we read a height that shrinks with the
+    // current insets the bubble is permanently created short.
+    //
+    // Confirmed on-device (Pixel 8 Pro, Android 17): both the old
+    // `0.8 * defaultDisplay.getSize()` and getCurrentWindowMetrics() return the
+    // *currently available* height, so a bubble opened while the keyboard was up was
+    // created at ~0.6x the screen height (desiredHeight 488dp vs 797dp) and stayed
+    // short — this is the "bubble height varies / got shorter on reopen" bug.
+    // getMaximumWindowMetrics() (API 30+) / getRealSize() return the full physical
+    // display height regardless of IME, split-screen or insets, so every bubble gets
+    // the same stable full height.
     val windowManager = application.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     @Suppress("DEPRECATION")
     val displayHeight = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      windowManager.currentWindowMetrics.bounds.height()
+      windowManager.maximumWindowMetrics.bounds.height()
     } else {
       Point().apply(windowManager.defaultDisplay::getRealSize).y
     }
