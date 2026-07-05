@@ -132,10 +132,20 @@ constructor(
       ?.let(Icon::createWithAdaptiveBitmap)
       ?: bubbleData.fallbackIcon()
 
-    val displayHeight = (application.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
-      .defaultDisplay
-      .let { display -> Point().apply(display::getSize).y }
-    val desiredHeight = Utils.pxToDp((displayHeight * 0.8).toInt())
+    // Ported from master commit 0ba62490 (user fix): read the MAXIMUM window metrics so the
+    // expanded bubble height is the full physical display height, independent of IME /
+    // split-screen / insets. The old `0.8 * defaultDisplay.getSize()` (and getCurrentWindow
+    // Metrics) return the *currently available* height, so a bubble created while the keyboard
+    // was up was baked short (e.g. desiredHeight 488dp vs 797dp on Pixel 8 Pro/Android 17) and
+    // stayed short on every reopen. maximumWindowMetrics / getRealSize give a stable full height.
+    val windowManager = application.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    @Suppress("DEPRECATION")
+    val displayHeight = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      windowManager.maximumWindowMetrics.bounds.height()
+    } else {
+      Point().apply(windowManager.defaultDisplay::getRealSize).y
+    }
+    val desiredHeight = Utils.pxToDp(displayHeight)
 
     // From Android 11 (API 30) a notification only surfaces as a bubble when it
     // references a *published* long-lived sharing shortcut. Without it the platform
