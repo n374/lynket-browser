@@ -33,7 +33,10 @@ import javax.inject.Inject
 
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [19, 21], application = LynketTestApplication::class)
+// SDK must be >= minSdk (23); the old [19, 21] made Robolectric's package parser reject the test
+// APK ("Requires newer sdk version #23"), failing the whole suite. 28 is the max Robolectric 4.3
+// supports.
+@Config(sdk = [23, 28], application = LynketTestApplication::class)
 abstract class LynketRobolectricSuite {
   lateinit var testAppComponent: TestAppComponent
 

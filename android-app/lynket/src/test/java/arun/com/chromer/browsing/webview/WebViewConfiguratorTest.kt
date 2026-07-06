@@ -38,7 +38,7 @@ import org.robolectric.annotation.Config
  * jandan's comment widget) throw and show "加载失败". See WebViewConfigurator kdoc.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [21], application = LynketTestApplication::class)
+@Config(sdk = [23], application = LynketTestApplication::class)
 class WebViewConfiguratorTest {
 
   @Test

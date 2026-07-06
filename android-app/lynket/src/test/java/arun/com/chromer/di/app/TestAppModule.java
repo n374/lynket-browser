@@ -21,13 +21,31 @@ package arun.com.chromer.di.app;
 
 import android.app.Application;
 
+import javax.inject.Singleton;
+
 import arun.com.chromer.di.viewmodel.ViewModelModule;
 import dagger.Module;
+import dagger.Provides;
 
+/**
+ * Test counterpart of {@link AppModule}. The production graph binds the {@link Application} via the
+ * {@code @Component.Factory}'s {@code @BindsInstance} (see AppComponent); the test graph uses the
+ * builder style, so we provide the Application from this module instead. Previously this relied on
+ * {@code super(application)} + an AppModule Application provider that no longer exist, which broke
+ * the unit-test Dagger graph ("Application cannot be provided").
+ */
 @Module(includes = ViewModelModule.class)
 public class TestAppModule extends AppModule {
 
+  private final Application application;
+
   public TestAppModule(Application application) {
-    super(application);
+    this.application = application;
+  }
+
+  @Provides
+  @Singleton
+  Application provideApplication() {
+    return application;
   }
 }
