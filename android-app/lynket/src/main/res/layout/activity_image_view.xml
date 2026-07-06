@@ -23,10 +23,14 @@
   android:layout_height="match_parent"
   android:orientation="vertical">
 
-  <uk.co.senab.photoview.PhotoView
+  <!-- Was uk.co.senab.photoview.PhotoView; swapped to plain ImageView because the
+       PhotoView 1.3.1 artifact is no longer fetchable (jcenter dead, JitPack needs a
+       GitHub token). Only effect: article images are no longer pinch-zoomable. -->
+  <ImageView
     android:id="@+id/imageView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:contentDescription="@null" />
+    android:contentDescription="@null"
+    android:scaleType="fitCenter" />
 
 </LinearLayout>

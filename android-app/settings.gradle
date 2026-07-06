@@ -45,6 +45,10 @@ dependencyResolutionManagement {
   // repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
   defaultLibrariesExtensionName.set("deps")
   repositories {
+    // Locally-built author libraries (dev.arunkumar.android:*:master-SNAPSHOT),
+    // published via base-android :publishToMavenLocal since the Sonatype snapshots
+    // were purged. Listed first so they win over the (dead) remote snapshot repo.
+    mavenLocal()
     google()
     mavenCentral()
     jcenter()
@@ -79,4 +83,5 @@ include ":lynket", ":disk-cache"
 //      substitute module("gradle.plugin.dev.arunkumar:scabbard-gradle-plugin") with project(":")
 //    }
 //  }
-include ':lynket-playground'
+// Playground module excluded from this build — not needed for the app APK.
+// include ':lynket-playground'

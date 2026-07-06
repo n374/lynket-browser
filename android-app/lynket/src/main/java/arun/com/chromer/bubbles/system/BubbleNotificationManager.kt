@@ -32,6 +32,10 @@ import android.net.Uri
 import android.os.Build
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
+import androidx.core.app.Person as PersonCompat
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import arun.com.chromer.R
 import arun.com.chromer.browsing.webview.EmbeddableWebViewActivity
@@ -43,7 +47,11 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val BUBBLE_NOTIFICATION_CHANNEL_ID = "BUBBLE_NOTIFICATION_CHANNEL_ID"
+// NOTE: A NotificationChannel's bubble setting is locked at creation time and cannot be
+// changed afterwards. Bumping this id forces a fresh channel created *with*
+// setAllowBubbles(true), so installs that already had the old (bubble-disabled) channel
+// start bubbling. Bump the suffix again if the channel config ever needs to change.
+private const val BUBBLE_NOTIFICATION_CHANNEL_ID = "BUBBLE_NOTIFICATION_CHANNEL_ID_v2"
 private const val BUBBLE_NOTIFICATION_GROUP = "bubbles"
 
 @Singleton
@@ -104,22 +112,92 @@ constructor(
     val context = bubbleData.contextRef.get() ?: application
     val website = bubbleData.website
 
+    val viewIntent = Intent(context, EmbeddableWebViewActivity::class.java).apply {
+      // A non-null action is required so the same Intent can back a sharing shortcut.
+      action = Intent.ACTION_VIEW
+      data = Uri.parse(website.url)
+    }
+
     val bubbleIntent = PendingIntent.getActivity(
       context,
       website.url.hashCode(),
-      Intent(context, EmbeddableWebViewActivity::class.java).apply {
-        data = Uri.parse(website.url)
-      },
-      PendingIntent.FLAG_UPDATE_CURRENT
+      viewIntent,
+      // FLAG_IMMUTABLE is mandatory once targeting Android 12 (targetSdk 31): without
+      // it PendingIntent creation throws IllegalArgumentException and the bubble never
+      // gets built. This is one half of why native bubbles were broken (issue #170).
+      PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 
     val bubbleIcon: Icon = bubbleData.icon
       ?.let(Icon::createWithAdaptiveBitmap)
       ?: bubbleData.fallbackIcon()
 
-    val displayHeight = (application.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
-      .defaultDisplay
-      .let { display -> Point().apply(display::getSize).y }
+    // Ported from master commit 0ba62490 (user fix): read the MAXIMUM window metrics so the
+    // expanded bubble height is the full physical display height, independent of IME /
+    // split-screen / insets. The old `0.8 * defaultDisplay.getSize()` (and getCurrentWindow
+    // Metrics) return the *currently available* height, so a bubble created while the keyboard
+    // was up was baked short (e.g. desiredHeight 488dp vs 797dp on Pixel 8 Pro/Android 17) and
+    // stayed short on every reopen. maximumWindowMetrics / getRealSize give a stable full height.
+    val windowManager = application.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    @Suppress("DEPRECATION")
+    val displayHeight = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      windowManager.maximumWindowMetrics.bounds.height()
+    } else {
+      Point().apply(windowManager.defaultDisplay::getRealSize).y
+    }
+    val desiredHeight = Utils.pxToDp(displayHeight)
+
+    // From Android 11 (API 30) a notification only surfaces as a bubble when it
+    // references a *published* long-lived sharing shortcut. Without it the platform
+    // silently downgrades the bubble to an ordinary notification, which is the main
+    // reason native bubbles appeared broken on Android 11+ (issue #170).
+    val shortcutId = website.url
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      val shortcut = ShortcutInfoCompat.Builder(application, shortcutId)
+        .setLongLived(true)
+        .setShortLabel(website.safeLabel())
+        .setLongLabel(website.preferredUrl())
+        .setIcon(bubbleData.bubbleIconCompat())
+        .setIntent(viewIntent)
+        .setPerson(
+          PersonCompat.Builder()
+            // Spike RAS-38 (conversation gate): on targetSdk >= R the platform's
+            // BubbleExtractor requires record.isConversation()==true, and
+            // NotificationRecord.isConversation() rejects a MessagingStyle notif whose
+            // shortcut person isOnlyBots(). setBot(true) here was exactly what made
+            // Lynket's bubble judged "non-conversation" and dropped. Must be non-bot.
+            .setBot(false)
+            .setName(website.safeLabel())
+            .setImportant(true)
+            .build()
+        )
+        .build()
+      // Must be published before notify(), otherwise the bubble metadata won't apply.
+      ShortcutManagerCompat.pushDynamicShortcut(application, shortcut)
+    }
+
+    val bubbleMetadata = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      // Shortcut-backed metadata is the supported path on API 30+.
+      Notification.BubbleMetadata.Builder(shortcutId)
+        .setDesiredHeight(desiredHeight)
+        // Spike RAS-38 (per user request): keep the bubble COLLAPSED on arrival — it floats
+        // as a bubble icon and only expands when the user taps it. Auto-expand was tried and
+        // works (needs a foreground post), but the desired UX is tap-to-open, so keep false.
+        .setAutoExpandBubble(false)
+        .setSuppressNotification(true)
+        .build()
+    } else {
+      // API 29 (Android 10) only supports the icon + intent constructor.
+      @Suppress("DEPRECATION")
+      Notification.BubbleMetadata.Builder()
+        .setIcon(bubbleIcon)
+        .setIntent(bubbleIntent)
+        .setDesiredHeight(desiredHeight)
+        // Spike RAS-38 (per user request): collapsed on arrival, tap-to-expand. See R+ branch.
+        .setAutoExpandBubble(false)
+        .setSuppressNotification(true)
+        .build()
+    }
 
     val bubbleNotification = notification(context, BUBBLE_NOTIFICATION_CHANNEL_ID) {
       setContentTitle(website.safeLabel())
@@ -136,20 +214,25 @@ constructor(
       setSmallIcon(Icon.createWithResource(context, R.drawable.ic_chromer_notification))
       setLargeIcon(bubbleIcon)
 
-      bubbleMetadata {
-        setIcon(bubbleIcon)
-        setIcon(bubbleIcon)
-        setIntent(bubbleIntent)
-        setAutoExpandBubble(false)
-        setSuppressNotification(true)
-        setDesiredHeight(Utils.pxToDp((displayHeight * 0.8).toInt()))
+      // Fallback when the bubble can't be shown (bubbles disabled for the app/channel):
+      // the notification degrades gracefully and tapping it opens the page instead of
+      // doing nothing.
+      setContentIntent(bubbleIntent)
+
+      // Associating the notification with the published shortcut is what makes it a
+      // valid conversation/bubble on Android 11+.
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        setShortcutId(shortcutId)
       }
+      setBubbleMetadata(bubbleMetadata)
 
       // Required when targeting 10
       // https://developer.android.com/guide/topics/ui/bubbles#when_bubbles_appear
       setCategory(Notification.CATEGORY_CALL)
       style = Notification.MessagingStyle(addPerson {
-        setBot(true)
+        // Spike RAS-38: same conversation gate as the shortcut person above — the
+        // MessagingStyle "self" person must not be a bot or isConversation() returns false.
+        setBot(false)
         setIcon(bubbleIcon)
         setName(website.safeLabel())
         setImportant(true)
@@ -174,5 +257,20 @@ constructor(
   } else {
     Icon.createWithResource(application, R.mipmap.ic_launcher)
   }
+
+  /** [IconCompat] counterpart of [fallbackIcon] used for the sharing shortcut on API 30+. */
+  private fun BubbleLoadData.bubbleIconCompat(): IconCompat = icon
+    ?.let(IconCompat::createWithAdaptiveBitmap)
+    ?: if (color != Constants.NO_COLOR) {
+      val iconSize = application.dpToPx(108.0)
+      IconCompat.createWithAdaptiveBitmap(
+        ColorDrawable(color).toBitmap(
+          width = iconSize,
+          height = iconSize
+        )
+      )
+    } else {
+      IconCompat.createWithResource(application, R.mipmap.ic_launcher)
+    }
 }
 

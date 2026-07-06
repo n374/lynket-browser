@@ -576,7 +576,13 @@ public class WebHeadService extends OverlayService implements WebHeadContract,
     notificationFilter.addAction(ACTION_STOP_WEBHEAD_SERVICE);
     notificationFilter.addAction(ACTION_OPEN_CONTEXT_ACTIVITY);
     notificationFilter.addAction(ACTION_OPEN_NEW_TAB);
-    registerReceiver(notificationActionReceiver, notificationFilter);
+    // Ported from master a2c01085: these are app-internal broadcasts (fired by our own
+    // foreground-notification PendingIntents), so the receiver must be RECEIVER_NOT_EXPORTED.
+    // On Android 13+ (API 33+) registering a receiver for non-system broadcasts without
+    // specifying exported-ness throws SecurityException, which under targetSdk 35 crashed
+    // WebHeadService on creation and broke Bubble (web-head) mode entirely.
+    ContextCompat.registerReceiver(
+        this, notificationActionReceiver, notificationFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
   }
 
   private void unregisterReceivers() {

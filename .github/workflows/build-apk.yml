@@ -1,0 +1,82 @@
+name: Build APK
+
+# 在 build/apk 分支上验证整条打包流水线：先把上游 base-android 的私有依赖
+# (dev.arunkumar.android:*) 从源码 publishToMavenLocal 复活，再编译出可安装的
+# debug APK 并作为 artifact 上传。release 正式签名包在后续 release.yml 中处理。
+#
+# Validate the full packaging pipeline on build/apk: resurrect the upstream
+# base-android private deps (dev.arunkumar.android:*) via publishToMavenLocal,
+# then assemble an installable debug APK and upload it as an artifact.
+
+on:
+  push:
+    branches:
+      - build/apk
+  workflow_dispatch:
+
+jobs:
+  build-debug-apk:
+    name: Build debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (fork)
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Cache Gradle & Maven Local
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.m2/repository
+          key: ${{ runner.os }}-gradle-${{ hashFiles('android-app/**/*.gradle*', 'android-app/**/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Resurrect base-android deps (publishToMavenLocal)
+        run: |
+          set -euxo pipefail
+          # base-android 的远程快照仓 (Sonatype s01) 已被清空，lynket 依赖的
+          # dev.arunkumar.android:*:master-SNAPSHOT 只能从源码本地发布。
+          # Pin 到上游 master 当前 HEAD，保证可复现。
+          BASE_ANDROID_REF=9380452
+          git clone https://github.com/arunkumar9t2/base-android.git "$RUNNER_TEMP/base-android"
+          cd "$RUNNER_TEMP/base-android"
+          git checkout "$BASE_ANDROID_REF"
+          # CI 无签名密钥，注释掉 configureSigning() 才能跑 publishToMavenLocal。
+          # （这正是本机为复活构建所做的、未提交的同一处改动。）
+          sed -i 's|^  configureSigning()|  // configureSigning() disabled in CI (no signing keys for local publish)|' \
+            build-logic/src/main/kotlin/publish/PublishingLibrary.kt
+          chmod +x gradlew
+          # 关键：base-android 的 version 仅在带 -Psnapshot 时才取 "master-SNAPSHOT"
+          # （见 base-android build-logic/.../publish/PublishingCommon.kt 中
+          #  `version = if (hasProperty("snapshot")) "master-SNAPSHOT" else versions[name]`）。
+          # 不带 -Psnapshot 会发布成具体版本号，与 lynket 依赖的
+          # dev.arunkumar.android:*:master-SNAPSHOT 对不上，导致 assembleDebug 解析失败。
+          ./gradlew --no-daemon --stacktrace -Psnapshot \
+            :common:publishToMavenLocal \
+            :dagger-base:publishToMavenLocal \
+            :logging:publishToMavenLocal \
+            :dagger-viewmodel:publishToMavenLocal \
+            :epoxy-utils:publishToMavenLocal \
+            :rx-utils:publishToMavenLocal
+
+      - name: Build debug APK
+        working-directory: android-app
+        run: |
+          set -euxo pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace :lynket:assembleDebug
+
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lynket-debug-apk
+          path: android-app/lynket/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

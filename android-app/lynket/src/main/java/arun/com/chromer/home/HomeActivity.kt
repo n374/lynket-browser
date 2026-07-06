@@ -23,7 +23,10 @@ package arun.com.chromer.home
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.postDelayed
+import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -88,6 +91,8 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
     setTheme(R.style.AppTheme_NoActionBar)
     super.onCreate(savedInstanceState)
 
+    applyWindowInsets()
+
     if (Preferences.get(this).isFirstRun) {
       startActivity(Intent(this, ChromerIntroActivity::class.java))
     }
@@ -98,6 +103,42 @@ class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
     setupSearchBar()
     setupFeed()
     setupEventListeners()
+
+    requestPostNotificationsIfNeeded()
+  }
+
+  /**
+   * Ported from master 5e2d41f9: apply system-bar + display-cutout insets as padding so the header
+   * (settings/tips icons) and the bottom search bar are not drawn under the status/navigation bars.
+   * Under targetSdk 35 the system forces edge-to-edge on Android 15+ (API 35+); without this the
+   * header overlaps the status bar and the top-right settings gear becomes untappable. On older
+   * versions the dispatched insets are 0, so this is a no-op there.
+   */
+  private fun applyWindowInsets() {
+    ViewCompat.setOnApplyWindowInsetsListener(coordinatorLayout) { view, insets ->
+      val bars = insets.getInsets(
+        WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+      )
+      view.updatePadding(top = bars.top, bottom = bars.bottom, left = bars.left, right = bars.right)
+      insets
+    }
+  }
+
+  /**
+   * Spike RAS-38: on Android 13+ (targetSdk 33+) notifications — and therefore bubbles —
+   * are blocked until the user grants POST_NOTIFICATIONS at runtime. We request it once on
+   * first launch of the home screen. The permission string is used as a literal because the
+   * Manifest.permission.POST_NOTIFICATIONS constant only exists from compileSdk 33 and we
+   * compile against 31 (see Constants.ANDROID_TARGET_SDK note).
+   */
+  private fun requestPostNotificationsIfNeeded() {
+    if (android.os.Build.VERSION.SDK_INT < 33) return
+    val permission = "android.permission.POST_NOTIFICATIONS"
+    val granted = androidx.core.content.ContextCompat.checkSelfPermission(this, permission) ==
+      android.content.pm.PackageManager.PERMISSION_GRANTED
+    if (!granted) {
+      androidx.core.app.ActivityCompat.requestPermissions(this, arrayOf(permission), 42)
+    }
   }
 
   override fun snack(textToSnack: String) {

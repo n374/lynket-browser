@@ -66,9 +66,9 @@ dependencies {
   testImplementation "androidx.test:runner:1.3.0"
   testImplementation "androidx.test:rules:1.3.0"
 
-  // Personal libs
-  implementation "in.arunkumarsampath:suggestions:1.0.3"
-  implementation "in.arunkumarsampath:transition-x:1.1.0"
+  // Personal libs — jcenter is dead, so resolve from JitPack (identical source/packages).
+  implementation "com.github.arunkumar9t2:rxSuggestions:1.0.3" // was in.arunkumarsampath:suggestions:1.0.3
+  // transition-x removed: declared but unused anywhere in source (0 references).
   implementation "dev.arunkumar.android:common:master-SNAPSHOT"
   implementation "dev.arunkumar.android:dagger-base:master-SNAPSHOT"
   implementation "dev.arunkumar.android:logging:master-SNAPSHOT"
@@ -136,9 +136,9 @@ dependencies {
   implementation "com.github.bumptech.glide:glide:4.9.0"
   kapt "com.github.bumptech.glide:compiler:4.9.0"
 
-  // Bottom sheet
-  implementation "com.flipboard:bottomsheet-core:1.5.1"
-  implementation "com.flipboard:bottomsheet-commons:1.5.1"
+  // Bottom sheet — jcenter is dead, resolve from JitPack (1.5.3, API-compatible).
+  implementation "com.github.Flipboard.bottomsheet:bottomsheet-core:1.5.3"
+  implementation "com.github.Flipboard.bottomsheet:bottomsheet-commons:1.5.3"
 
   // Animations
   implementation "com.facebook.rebound:rebound:0.3.8"
@@ -170,11 +170,12 @@ dependencies {
   implementation "com.airbnb.android:epoxy:4.4.0"
   kapt "com.airbnb.android:epoxy-processor:4.4.0"
 
-  // Storage
-  implementation "io.paperdb:paperdb:2.6"
-  implementation "com.github.chrisbanes:PhotoView:1.3.1"
+  // Storage — paperdb via JitPack (pilgr/Paper, same io.paperdb classes); jcenter dead.
+  implementation "com.github.pilgr:Paper:2.6" // was io.paperdb:paperdb:2.6
+  // PhotoView removed: 1.3.1 artifact unfetchable (jcenter dead, JitPack needs a token).
+  // Its single use (image viewer layout) was swapped to a plain ImageView.
 
-  implementation "com.github.florent37:shapeofview:1.4.7"
+  // shapeofview removed: declared but unused anywhere in source (0 references).
 
   // Disk LRU cache
   implementation project(":disk-cache")
