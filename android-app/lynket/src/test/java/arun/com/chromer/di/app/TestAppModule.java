@@ -28,10 +28,11 @@ import dagger.Module;
 import dagger.Provides;
 
 /**
- * Test variant of {@link AppModule}. After the modernization, {@link AppModule} no longer takes an
- * {@code Application} in its constructor (the production graph @BindsInstance's it via the component
- * factory). The test graph is built via this module, so it both inherits AppModule's @Provides
- * bindings and supplies the {@code Application} instance the rest of the graph depends on.
+ * Test counterpart of {@link AppModule}. The production graph binds the {@link Application} via the
+ * {@code @Component.Factory}'s {@code @BindsInstance} (see AppComponent); the test graph uses the
+ * builder style, so we provide the Application from this module instead. Previously this relied on
+ * {@code super(application)} + an AppModule Application provider that no longer exist, which broke
+ * the unit-test Dagger graph ("Application cannot be provided").
  */
 @Module(includes = ViewModelModule.class)
 public class TestAppModule extends AppModule {
@@ -44,7 +45,7 @@ public class TestAppModule extends AppModule {
 
   @Provides
   @Singleton
-  Application application() {
+  Application provideApplication() {
     return application;
   }
 }

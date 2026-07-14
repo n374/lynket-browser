@@ -33,8 +33,6 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.GridLayoutManager
 import arun.com.chromer.R
 import arun.com.chromer.data.apps.model.Provider
-import arun.com.chromer.databinding.ActivityProviderSelectionBinding
-import arun.com.chromer.databinding.DialogProviderInfoBinding
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.extenstions.gone
 import arun.com.chromer.extenstions.show
@@ -47,14 +45,18 @@ import arun.com.chromer.util.RxEventBus
 import arun.com.chromer.util.Utils
 import arun.com.chromer.util.glide.GlideApp
 import arun.com.chromer.util.glide.appicon.ApplicationIcon
+import butterknife.BindView
+import butterknife.ButterKnife
+import butterknife.OnClick
+import butterknife.Unbinder
 import com.afollestad.materialdialogs.MaterialDialog
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
+import kotlinx.android.synthetic.main.activity_provider_selection.*
 import rx.subscriptions.CompositeSubscription
 import javax.inject.Inject
 
 class ProviderSelectionActivity : BaseActivity() {
-  private lateinit var binding: ActivityProviderSelectionBinding
   @Inject
   lateinit var viewModelFactory: ViewModelProvider.Factory
 
@@ -78,9 +80,6 @@ class ProviderSelectionActivity : BaseActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    binding = ActivityProviderSelectionBinding.inflate(layoutInflater)
-    setContentView(binding.root)
-
     setupToolbar()
     setupWebViewCard()
     setupCustomTabProvidersCard()
@@ -98,7 +97,7 @@ class ProviderSelectionActivity : BaseActivity() {
 
 
   private fun setupToolbar() {
-    setSupportActionBar(binding.toolbar)
+    setSupportActionBar(toolbar)
     if (supportActionBar != null) {
       supportActionBar!!.setDisplayHomeAsUpEnabled(true)
       supportActionBar!!.setHomeAsUpIndicator(R.drawable.article_ic_close)
@@ -106,7 +105,7 @@ class ProviderSelectionActivity : BaseActivity() {
   }
 
   private fun setupCustomTabProvidersCard() {
-    binding.providerRecyclerView.apply {
+    providerRecyclerView.apply {
       layoutManager = GridLayoutManager(this@ProviderSelectionActivity, 4)
       adapter = providersAdapter
     }
@@ -118,8 +117,6 @@ class ProviderSelectionActivity : BaseActivity() {
   }
 
   private fun setupWebViewCard() {
-    binding.webViewCard.setOnClickListener { onWebViewClick() }
-
     GlideApp.with(this)
       .load(ApplicationIcon.createUri(Constants.SYSTEM_WEBVIEW))
       .error(
@@ -128,9 +125,9 @@ class ProviderSelectionActivity : BaseActivity() {
           .colorRes(R.color.primary)
           .sizeDp(56)
       )
-      .into(binding.webViewImg)
+      .into(webViewImg)
     if (!Utils.ANDROID_LOLLIPOP) {
-      binding.webViewNotRecommended.show()
+      webViewNotRecommended.show()
     }
   }
 
@@ -162,7 +159,8 @@ class ProviderSelectionActivity : BaseActivity() {
     }
   }
 
-  private fun onWebViewClick() {
+  @OnClick(R.id.webViewCard)
+  fun onWebViewClick() {
     MaterialDialog.Builder(this)
       .title(R.string.are_you_sure)
       .content(R.string.webview_disadvantages)
@@ -185,8 +183,20 @@ class ProviderSelectionActivity : BaseActivity() {
     private val preferences: Preferences
   ) : DialogInterface.OnDismissListener {
     val subs = CompositeSubscription()
+    private lateinit var unBinder: Unbinder
     private var dialog: MaterialDialog? = null
-    private var dialogBinding: DialogProviderInfoBinding? = null
+
+    @BindView(R.id.icon_view)
+    @JvmField
+    var icon: ImageView? = null
+
+    @BindView(R.id.providerDetails)
+    @JvmField
+    var providerDetailsTv: TextView? = null
+
+    @BindView(R.id.features)
+    @JvmField
+    var features: TextView? = null
 
     fun show(): ProviderDialog {
       dialog = MaterialDialog.Builder(activity!!)
@@ -204,15 +214,14 @@ class ProviderSelectionActivity : BaseActivity() {
           dismiss()
           activity?.finish()
         }.show()
+      unBinder = ButterKnife.bind(this, dialog!!.customView!!)
 
-      dialogBinding = DialogProviderInfoBinding.bind(dialog!!.customView!!)
-
-      GlideApp.with(activity!!).load(provider.iconUri).into(dialogBinding!!.iconView)
+      GlideApp.with(activity!!).load(provider.iconUri).into(icon!!)
 
       if (provider.features.isNotEmpty()) {
-        dialogBinding!!.providerDetails.text = provider.features
+        providerDetailsTv!!.text = provider.features
       } else {
-        dialogBinding!!.features.gone()
+        features!!.gone()
       }
       return this
     }
@@ -224,7 +233,7 @@ class ProviderSelectionActivity : BaseActivity() {
     override fun onDismiss(dialogInterface: DialogInterface?) {
       subs.clear()
       activity = null
-      dialogBinding = null
+      unBinder.unbind()
       dialog = null
     }
   }

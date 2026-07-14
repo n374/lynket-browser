@@ -25,7 +25,6 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import arun.com.chromer.R
-import arun.com.chromer.databinding.LayoutTabsInfoCardBinding
 import arun.com.chromer.extenstions.gone
 import arun.com.chromer.extenstions.show
 import arun.com.chromer.tabs.TabsManager
@@ -34,6 +33,7 @@ import com.airbnb.epoxy.EpoxyAttribute.Option.DoNotHash
 import com.airbnb.epoxy.EpoxyModelClass
 import dev.arunkumar.android.epoxy.model.KotlinEpoxyModelWithHolder
 import dev.arunkumar.android.epoxy.model.KotlinHolder
+import kotlinx.android.synthetic.main.layout_tabs_info_card.*
 
 @EpoxyModelClass(layout = R.layout.layout_tabs_info_card)
 abstract class TabsInfoModel : KotlinEpoxyModelWithHolder<TabsInfoModel.ViewHolder>() {
@@ -45,19 +45,19 @@ abstract class TabsInfoModel : KotlinEpoxyModelWithHolder<TabsInfoModel.ViewHold
 
   override fun bind(holder: ViewHolder) {
     super.bind(holder)
-    holder.binding.tabsDescription.text = holder.binding.tabsDescription.context.resources.getQuantityString(
+    holder.tabsDescription.text = holder.tabsDescription.context.resources.getQuantityString(
       R.plurals.active_tabs,
       tabs.size,
       tabs.size
     )
-    holder.binding.tabsCard.setOnClickListener {
+    holder.tabsCard.setOnClickListener {
       tabsManager.showTabsActivity()
     }
     if (tabs.isEmpty()) {
-      holder.binding.tabsPreviewRecyclerView.gone()
+      holder.tabsPreviewRecyclerView.gone()
     } else {
-      holder.binding.tabsPreviewRecyclerView.show()
-      holder.binding.tabsPreviewRecyclerView.withModels {
+      holder.tabsPreviewRecyclerView.show()
+      holder.tabsPreviewRecyclerView.withModels {
         tabs.forEach { tab ->
           tab {
             id(tab.hashCode())
@@ -70,15 +70,12 @@ abstract class TabsInfoModel : KotlinEpoxyModelWithHolder<TabsInfoModel.ViewHold
   }
 
   class ViewHolder : KotlinHolder() {
-    internal lateinit var binding: LayoutTabsInfoCardBinding
-
     override fun bindView(itemView: View) {
       super.bindView(itemView)
-      binding = LayoutTabsInfoCardBinding.bind(itemView)
-      binding.tabsPreviewRecyclerView.apply {
+      tabsPreviewRecyclerView.apply {
         (itemAnimator as? DefaultItemAnimator)?.supportsChangeAnimations = false
         layoutManager = LinearLayoutManager(
-          binding.root.context,
+          containerView.context,
           RecyclerView.HORIZONTAL,
           false
         )

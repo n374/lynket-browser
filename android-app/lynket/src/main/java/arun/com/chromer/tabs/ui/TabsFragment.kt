@@ -21,9 +21,7 @@
 package arun.com.chromer.tabs.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -34,7 +32,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionManager
 import arun.com.chromer.R
 import arun.com.chromer.data.website.model.Website
-import arun.com.chromer.databinding.FragmentTabsBinding
 import arun.com.chromer.di.fragment.FragmentComponent
 import arun.com.chromer.extenstions.gone
 import arun.com.chromer.extenstions.show
@@ -43,15 +40,13 @@ import arun.com.chromer.shared.base.fragment.BaseFragment
 import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.util.glide.GlideApp
 import com.afollestad.materialdialogs.MaterialDialog
+import kotlinx.android.synthetic.main.fragment_tabs.*
 import javax.inject.Inject
 
 /**
  * Created by arunk on 20-12-2017.
  */
 class TabsFragment : BaseFragment(), FabHandler {
-
-  private var _binding: FragmentTabsBinding? = null
-  private val binding get() = _binding!!
 
   @Inject
   lateinit var tabsManager: TabsManager
@@ -70,26 +65,10 @@ class TabsFragment : BaseFragment(), FabHandler {
   override val layoutRes: Int get() = R.layout.fragment_tabs
 
 
-  override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
-  ): View {
-    _binding = FragmentTabsBinding.inflate(inflater, container, false)
-    return super.onCreateView(inflater, container, savedInstanceState).also {
-      return binding.root
-    }
-  }
-
-  override fun onDestroyView() {
-    super.onDestroyView()
-    _binding = null
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     setupRecyclerView()
-    with(binding.swipeRefreshLayout) {
+    with(swipeRefreshLayout) {
       setOnRefreshListener {
         loadTabs()
         isRefreshing = false
@@ -122,7 +101,7 @@ class TabsFragment : BaseFragment(), FabHandler {
   private fun setupRecyclerView() {
     // Setup RecyclerView
     tabsAdapter = TabsAdapter(GlideApp.with(this), tabsManager)
-    binding.tabsRecyclerView.apply {
+    tabsRecyclerView.apply {
       layoutManager = LinearLayoutManager(activity)
       adapter = tabsAdapter
     }
@@ -148,23 +127,23 @@ class TabsFragment : BaseFragment(), FabHandler {
         }
       }
     }
-    ItemTouchHelper(swipeTouch).apply { attachToRecyclerView(binding.tabsRecyclerView) }
+    ItemTouchHelper(swipeTouch).apply { attachToRecyclerView(tabsRecyclerView) }
   }
 
   private fun setTabs(tabs: List<TabsManager.Tab>) {
     tabsAdapter.submitList(tabs)
-    TransitionManager.beginDelayedTransition(binding.fragmentTabsRoot)
+    TransitionManager.beginDelayedTransition(fragmentTabsRoot)
     if (tabs.isEmpty()) {
-      binding.error.show()
-      binding.swipeRefreshLayout.gone()
+      error.show()
+      swipeRefreshLayout.gone()
     } else {
-      binding.error.gone()
-      binding.swipeRefreshLayout.show()
+      error.gone()
+      swipeRefreshLayout.show()
     }
   }
 
   private fun showLoading(loading: Boolean) {
-    binding.swipeRefreshLayout.isRefreshing = loading
+    swipeRefreshLayout.isRefreshing = loading
   }
 
   override fun onHiddenChanged(hidden: Boolean) {

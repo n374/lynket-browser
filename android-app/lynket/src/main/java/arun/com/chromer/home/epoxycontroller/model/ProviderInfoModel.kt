@@ -22,10 +22,8 @@ package arun.com.chromer.home.epoxycontroller.model
 
 import android.content.Intent
 import android.net.Uri
-import android.view.View
 import arun.com.chromer.R
 import arun.com.chromer.browsing.providerselection.ProviderSelectionActivity
-import arun.com.chromer.databinding.LayoutProviderInfoCardBinding
 import arun.com.chromer.extenstions.StringResource
 import arun.com.chromer.extenstions.gone
 import arun.com.chromer.extenstions.resolveStringResource
@@ -37,6 +35,7 @@ import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
 import dev.arunkumar.android.epoxy.model.KotlinEpoxyModelWithHolder
 import dev.arunkumar.android.epoxy.model.KotlinHolder
+import kotlinx.android.synthetic.main.layout_provider_info_card.*
 
 data class CustomTabProviderInfo(
   val iconUri: Uri,
@@ -51,26 +50,26 @@ abstract class ProviderInfoModel : KotlinEpoxyModelWithHolder<ProviderInfoModel.
   lateinit var providerInfo: CustomTabProviderInfo
 
   override fun bind(holder: ViewHolder) {
-    GlideApp.with(holder.binding.providerIcon)
+    GlideApp.with(holder.providerIcon)
       .load(providerInfo.iconUri)
       .error(
-        IconicsDrawable(holder.binding.providerIcon.context)
+        IconicsDrawable(holder.providerIcon.context)
           .icon(CommunityMaterial.Icon.cmd_web)
           .colorRes(R.color.primary)
           .sizeDp(36)
       )
-      .into(holder.binding.providerIcon)
-    holder.binding.providerDescription.run {
+      .into(holder.providerIcon)
+    holder.providerDescription.run {
       text = HtmlCompat.fromHtml(context.resolveStringResource(providerInfo.providerDescription))
     }
     if (providerInfo.providerReason.resource != 0) {
-      holder.binding.providerReason.run {
+      holder.providerReason.run {
         text = context.resolveStringResource(providerInfo.providerReason)
       }
     } else {
-      holder.binding.providerReason.gone()
+      holder.providerReason.gone()
     }
-    holder.binding.providerChangeButton.run {
+    holder.providerChangeButton.run {
       gone(!providerInfo.allowChange)
       setOnClickListener {
         context.startActivity(Intent(context, ProviderSelectionActivity::class.java))
@@ -78,12 +77,5 @@ abstract class ProviderInfoModel : KotlinEpoxyModelWithHolder<ProviderInfoModel.
     }
   }
 
-  class ViewHolder : KotlinHolder() {
-    internal lateinit var binding: LayoutProviderInfoCardBinding
-
-    override fun bindView(itemView: View) {
-      super.bindView(itemView)
-      binding = LayoutProviderInfoCardBinding.bind(itemView)
-    }
-  }
+  class ViewHolder : KotlinHolder()
 }

@@ -31,8 +31,8 @@ import arun.com.chromer.shared.epxoy.model.headerLayout
 import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.util.epoxy.indeterminateProgress
 import com.airbnb.epoxy.AsyncEpoxyController
-import dev.arunkumar.android.common.Resource
-import dev.arunkumar.android.common.Resource.Companion.idle
+import dev.arunkumar.common.result.Resource
+import dev.arunkumar.common.result.idle
 import javax.inject.Inject
 
 class HomeFeedController
@@ -61,18 +61,18 @@ constructor(
     }
 
   override fun buildModels() {
-    if (this@HomeFeedController.tabs.isNotEmpty() || customTabProviderInfo != null) {
+    if (tabs.isNotEmpty() || customTabProviderInfo != null) {
       headerLayout {
         id("status-header")
-        title(this@HomeFeedController.application.getString(R.string.status))
+        title(application.getString(R.string.status))
       }
     }
 
-    if (this@HomeFeedController.tabs.isNotEmpty()) {
+    if (tabs.isNotEmpty()) {
       tabsInfo {
         id("tabs-info")
-        tabs(this@HomeFeedController.tabs)
-        tabsManager(this@HomeFeedController.tabsManager)
+        tabs(tabs)
+        tabsManager(tabsManager)
       }
     }
 
@@ -85,7 +85,7 @@ constructor(
 
     headerLayout {
       id("pages-header")
-      title(this@HomeFeedController.application.getString(R.string.pages))
+      title(application.getString(R.string.pages))
     }
 
     when (val recents = recentWebSites) {
@@ -93,7 +93,7 @@ constructor(
         recentsCard {
           id("recents-card")
           websites(recents.data)
-          tabsManager(this@HomeFeedController.tabsManager)
+          tabsManager(tabsManager)
         }
       }
       is Resource.Loading -> {

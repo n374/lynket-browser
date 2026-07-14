@@ -21,15 +21,18 @@
 package arun.com.chromer.home.fragment
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import arun.com.chromer.R
 import arun.com.chromer.data.website.model.Website
-import arun.com.chromer.databinding.WidgetWebsiteGridItemBinding
 import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.util.glide.GlideApp
+import butterknife.ButterKnife
 import dev.arunkumar.android.dagger.fragment.PerFragment
+import kotlinx.android.extensions.LayoutContainer
+import kotlinx.android.synthetic.main.widget_website_grid_item.*
 import javax.inject.Inject
 
 /**
@@ -49,14 +52,14 @@ constructor(val tabsManager: TabsManager) :
   override fun onCreateViewHolder(
     parent: ViewGroup,
     viewType: Int
-  ): RecentsViewHolder {
-    val binding = WidgetWebsiteGridItemBinding.inflate(
-      LayoutInflater.from(parent.context),
+  ) = RecentsViewHolder(
+    tabsManager,
+    LayoutInflater.from(parent.context).inflate(
+      R.layout.widget_website_grid_item,
       parent,
       false
     )
-    return RecentsViewHolder(tabsManager, binding)
-  }
+  )
 
   override fun onBindViewHolder(holder: RecentsViewHolder, position: Int) {
     val website = websites[position]
@@ -65,7 +68,7 @@ constructor(val tabsManager: TabsManager) :
 
   override fun onViewDetachedFromWindow(holder: RecentsViewHolder) {
     super.onViewDetachedFromWindow(holder)
-    GlideApp.with(holder.itemView).clear(holder.binding.icon)
+    GlideApp.with(holder.itemView).clear(holder.icon)
   }
 
   override fun getItemCount(): Int = websites.size
@@ -82,18 +85,21 @@ constructor(val tabsManager: TabsManager) :
 
   class RecentsViewHolder(
     val tabsManager: TabsManager,
-    val binding: WidgetWebsiteGridItemBinding
-  ) : RecyclerView.ViewHolder(binding.root) {
+    override val containerView: View
+  ) : RecyclerView.ViewHolder(containerView), LayoutContainer {
+    init {
+      ButterKnife.bind(this, itemView)
+    }
 
     fun bind(website: Website?) {
       if (website != null) {
-        binding.label.text = website.safeLabel()
+        label.text = website.safeLabel()
         itemView.setOnClickListener {
           tabsManager.openUrl(itemView.context, website)
         }
         GlideApp.with(itemView)
           .load(website)
-          .into(binding.icon)
+          .into(icon)
       }
     }
   }

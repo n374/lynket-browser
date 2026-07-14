@@ -30,7 +30,6 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.speech.RecognizerIntent.EXTRA_RESULTS
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -41,10 +40,10 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView.VERTICAL
 import androidx.recyclerview.widget.SimpleItemAnimator
 import arun.com.chromer.R
-import arun.com.chromer.databinding.WidgetMaterialSearchViewBinding
 import arun.com.chromer.di.view.Detaches
 import arun.com.chromer.di.view.ViewComponent
 import arun.com.chromer.extenstions.gone
+import arun.com.chromer.extenstions.inflate
 import arun.com.chromer.search.suggestion.SuggestionController
 import arun.com.chromer.search.suggestion.items.SuggestionItem.HistorySuggestionItem
 import arun.com.chromer.search.suggestion.items.SuggestionType.*
@@ -54,6 +53,8 @@ import arun.com.chromer.util.Utils
 import arun.com.chromer.util.animations.spring
 import arun.com.chromer.util.epoxy.intercepts
 import arun.com.chromer.util.glide.GlideApp
+import butterknife.BindColor
+import butterknife.ButterKnife
 import com.jakewharton.rxbinding3.view.clicks
 import com.jakewharton.rxbinding3.view.focusChanges
 import com.jakewharton.rxbinding3.widget.editorActionEvents
@@ -61,11 +62,10 @@ import com.jakewharton.rxbinding3.widget.textChanges
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
 import dev.arunkumar.android.rxschedulers.SchedulerProvider
-import dev.arunkumar.android.rxschedulers.compose
-import dev.arunkumar.android.rxschedulers.poolToUi
 import io.reactivex.Observable
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
+import kotlinx.android.synthetic.main.widget_material_search_view.view.*
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -80,14 +80,13 @@ constructor(
 
   private var viewComponent: ViewComponent? = null
 
-  private val binding: WidgetMaterialSearchViewBinding = WidgetMaterialSearchViewBinding.inflate(
-    LayoutInflater.from(context),
-    this,
-    true
-  )
+  @BindColor(R.color.accent_icon_no_focus)
+  @JvmField
+  var normalColor = 0
 
-  private val normalColor: Int = context.getColor(R.color.accent_icon_no_focus)
-  private val focusedColor: Int = context.getColor(R.color.colorAccent)
+  @BindColor(R.color.colorAccent)
+  @JvmField
+  var focusedColor = 0
 
   private val xIcon: IconicsDrawable by lazy {
     IconicsDrawable(context)
@@ -125,16 +124,16 @@ constructor(
   private val searchPerformed = PublishSubject.create<String>()
   private val focusChanges = BehaviorSubject.createDefault(false)
 
-  private val searchQuery get() = if (binding.msvEditText.text == null) "" else binding.msvEditText.text.toString()
+  private val searchQuery get() = if (msvEditText.text == null) "" else msvEditText.text.toString()
 
   private val searchTermChanges by lazy {
-    binding.msvEditText.textChanges()
+    msvEditText.textChanges()
       .skipInitialValue()
       .takeUntil(viewDetaches)
       .share()
   }
 
-  val editText: EditText get() = binding.msvEditText
+  val editText: EditText get() = msvEditText
 
   fun voiceSearchFailed(): Observable<Any> = voiceSearchFailed.hide()
 
@@ -142,18 +141,19 @@ constructor(
     .hide()
     .switchMap(searchPresenter::getSearchUrl)
 
-  private val leftIconClicks by lazy { binding.msvLeftIcon.clicks().share() }
+  private val leftIconClicks by lazy { msvLeftIcon.clicks().share() }
 
   init {
-
     if (context is ProvidesActivityComponent) {
       viewComponent = context
         .activityComponent
         .viewComponentFactory().create(this)
         .also { component -> component.inject(this) }
     }
+    addView(inflate(R.layout.widget_material_search_view))
+    ButterKnife.bind(this)
 
-    binding.searchSuggestions.apply {
+    searchSuggestions.apply {
       (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
       layoutManager = GridLayoutManager(context, 4, VERTICAL, true)
       setController(suggestionController)
@@ -164,12 +164,12 @@ constructor(
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    setOnClickListener { if (!binding.msvEditText.hasFocus()) gainFocus() }
+    setOnClickListener { if (!msvEditText.hasFocus()) gainFocus() }
     setupEditText()
     setupLeftIcon()
     setupVoiceIcon()
 
-    binding.msvClearIcon.clicks().subscribe { binding.msvEditText.text = null }
+    msvClearIcon.clicks().subscribe { msvEditText.text = null }
 
     setupSuggestionController()
     setupPresenter()
@@ -184,7 +184,10 @@ constructor(
     clearFocus(null)
   }
 
-  override fun hasFocus() = binding.msvEditText.hasFocus() && super.hasFocus()
+  override fun hasFocus() = when {
+    msvEditText != null -> msvEditText.hasFocus() && super.hasFocus()
+    else -> super.hasFocus()
+  }
 
   fun focusChanges(): Observable<Boolean> = focusChanges.hide()
 
@@ -196,7 +199,7 @@ constructor(
 
   fun loseFocus(endAction: (() -> Unit)? = null) {
     setNormalColor()
-    binding.msvEditText.text = null
+    msvEditText.text = null
     hideKeyboard()
     hideSuggestions()
     focusChanges.onNext(false)
@@ -232,7 +235,7 @@ constructor(
         }
       }
     }
-    binding.msvLeftIcon.run {
+    msvLeftIcon.run {
       setImageDrawable(menuIcon)
       leftIconClicks
         .filter { focusChanges.value == true }
@@ -258,11 +261,11 @@ constructor(
   }
 
   private fun setupVoiceIcon() {
-    binding.msvVoiceIcon.run {
+    msvVoiceIcon.run {
       setImageDrawable(voiceIcon)
       setOnClickListener {
         if (searchQuery.isNotEmpty()) {
-          binding.msvEditText.setText("")
+          msvEditText?.setText("")
           clearFocus()
         } else {
           if (Utils.isVoiceRecognizerPresent(context)) {
@@ -279,7 +282,7 @@ constructor(
   }
 
   private fun setupEditText() {
-    binding.msvEditText.run {
+    msvEditText.run {
       focusChanges()
         .takeUntil(viewDetaches)
         .subscribe { hasFocus ->
@@ -325,9 +328,9 @@ constructor(
       .observeOn(schedulerProvider.ui)
       .takeUntil(viewDetaches)
       .subscribe { isEmpty ->
-        binding.searchSuggestions.gone(isEmpty)
+        searchSuggestions.gone(isEmpty)
         if (!isEmpty) {
-          binding.searchSuggestions.scrollToPosition(0)
+          searchSuggestions.scrollToPosition(0)
         }
       }
 
@@ -347,8 +350,8 @@ constructor(
       .filter { it.title.isNotEmpty() }
       .takeUntil(viewDetaches)
       .subscribe {
-        binding.msvEditText.setText(it.title)
-        binding.msvEditText.setSelection(it.title.length)
+        msvEditText.setText(it.title)
+        msvEditText.setSelection(it.title.length)
       }
   }
 
@@ -368,31 +371,31 @@ constructor(
   }
 
   private fun setFocusedColor() {
-    binding.msvLeftIcon.setImageDrawable(menuIcon.color(focusedColor))
-    binding.msvClearIcon.setImageDrawable(menuIcon.color(focusedColor))
-    binding.msvVoiceIcon.setImageDrawable(voiceIcon.color(focusedColor))
+    msvLeftIcon.setImageDrawable(menuIcon.color(focusedColor))
+    msvClearIcon.setImageDrawable(menuIcon.color(focusedColor))
+    msvVoiceIcon.setImageDrawable(voiceIcon.color(focusedColor))
   }
 
   private fun setNormalColor() {
-    binding.msvLeftIcon.setImageDrawable(menuIcon.color(normalColor))
-    binding.msvClearIcon.setImageDrawable(menuIcon.color(normalColor))
-    binding.msvVoiceIcon.setImageDrawable(voiceIcon.color(normalColor))
+    msvLeftIcon.setImageDrawable(menuIcon.color(normalColor))
+    msvClearIcon.setImageDrawable(menuIcon.color(normalColor))
+    msvVoiceIcon.setImageDrawable(voiceIcon.color(normalColor))
   }
 
   private fun handleIconsState() {
-    val color = if (binding.msvEditText.hasFocus()) focusedColor else normalColor
+    val color = if (msvEditText.hasFocus()) focusedColor else normalColor
     if (searchQuery.isNotEmpty()) {
-      binding.msvClearIcon.run {
+      msvClearIcon.run {
         setImageDrawable(xIcon.color(color))
         spring(SpringAnimation.ALPHA).animateToFinalPosition(1F)
       }
-      binding.msvVoiceIcon.setImageDrawable(voiceIcon.color(color))
+      msvVoiceIcon.setImageDrawable(voiceIcon.color(color))
     } else {
-      binding.msvClearIcon.run {
+      msvClearIcon.run {
         setImageDrawable(xIcon.color(color))
         spring(SpringAnimation.ALPHA).animateToFinalPosition(0F)
       }
-      binding.msvVoiceIcon.setImageDrawable(voiceIcon.color(color))
+      msvVoiceIcon.setImageDrawable(voiceIcon.color(color))
     }
   }
 

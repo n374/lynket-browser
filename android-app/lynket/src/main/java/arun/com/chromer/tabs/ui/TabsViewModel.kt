@@ -31,14 +31,6 @@ import rx.subscriptions.CompositeSubscription
 import timber.log.Timber
 import javax.inject.Inject
 
-/**
- * Legacy ViewModel for Tabs UI (XML-based).
- *
- * Migrated to Hilt: Uses @HiltViewModel annotation for automatic ViewModel injection.
- * Retains RxJava 1.x for now (will be migrated to Flows in future phase).
- *
- * Note: Modern Compose UI uses ModernTabsViewModel instead.
- */
 class TabsViewModel
 @Inject
 constructor(

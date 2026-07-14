@@ -24,8 +24,7 @@ import android.webkit.WebSettings
 
 /**
  * Central place to configure the [WebSettings] used by Lynket's in-app WebView browsing
- * ([WebViewActivity] and [EmbeddableWebViewActivity]). Extracted so the configuration can be
- * unit-tested (Robolectric) without launching the Activity.
+ * ([WebViewActivity]). Ported from master commit d3996723.
  */
 object WebViewConfigurator {
 

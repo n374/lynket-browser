@@ -21,17 +21,14 @@
 package arun.com.chromer.di.app
 
 import android.app.Application
-import androidx.lifecycle.ViewModelProvider
 import arun.com.chromer.browsing.icons.DefaultWebsiteIconsProvider
 import arun.com.chromer.browsing.icons.WebsiteIconsProvider
 import arun.com.chromer.di.viewmodel.ViewModelModule
 import arun.com.chromer.settings.Preferences
 import arun.com.chromer.util.RxEventBus
-import arun.com.chromer.util.viemodel.ViewModelFactory
 import com.afollestad.rxkprefs.rxkPrefs
 import dagger.Module
 import dagger.Provides
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.arunkumar.android.dagger.viewmodel.DefaultViewModelsBuilder
 import javax.inject.Singleton
 
@@ -42,18 +39,6 @@ import javax.inject.Singleton
   ]
 )
 open class AppModule {
-  /**
-   * Legacy Dagger graph bridge for the in-progress Dagger->Hilt migration (PR176).
-   * Some @HiltViewModels (e.g. HomeActivityViewModel, BrowsingViewModel) inject
-   * `@ApplicationContext Application`; when they are also reachable from the legacy
-   * @Component (AppComponent), that graph only @BindsInstance's the *unqualified* Application.
-   * Bridge the Hilt-qualified binding to the unqualified instance so the legacy graph also links.
-   */
-  @Provides
-  @Singleton
-  @ApplicationContext
-  internal fun providesApplicationContextApplication(application: Application): Application = application
-
   @Provides
   @Singleton
   internal fun providesPreferences(application: Application): Preferences =
@@ -71,11 +56,5 @@ open class AppModule {
   @Singleton
   internal fun websiteIconProvider(defaultWebsiteIconsProvider: DefaultWebsiteIconsProvider): WebsiteIconsProvider {
     return defaultWebsiteIconsProvider
-  }
-
-  @Provides
-  @Singleton
-  internal fun viewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory {
-    return factory
   }
 }

@@ -39,18 +39,18 @@ import arun.com.chromer.browsing.BrowsingActivity
 import arun.com.chromer.browsing.EXTRA_CURRENT_LOADING_URL
 import arun.com.chromer.browsing.menu.MenuDelegate
 import arun.com.chromer.data.website.model.Website
-import arun.com.chromer.databinding.ActivityWebViewBinding
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.extenstions.applyColor
 import arun.com.chromer.extenstions.setAutoHideProgress
 import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.ColorUtil
 import arun.com.chromer.util.Utils
+import kotlinx.android.synthetic.main.activity_web_view.*
+import kotlinx.android.synthetic.main.activity_web_view_content.*
 import timber.log.Timber
 import javax.inject.Inject
 
 open class WebViewActivity : BrowsingActivity() {
-  private lateinit var binding: ActivityWebViewBinding
   @Inject
   lateinit var menuDelegate: MenuDelegate
 
@@ -58,21 +58,10 @@ open class WebViewActivity : BrowsingActivity() {
   private var fgColorStateList: ColorStateList = ColorStateList.valueOf(0)
   private var foregroundColor = 0
 
-  override val layoutRes: Int = 0 // Using ViewBinding instead
-
   override fun inject(activityComponent: ActivityComponent) = activityComponent.inject(this)
 
   override fun onCreate(savedInstanceState: Bundle?) {
-    // Inflate `binding` BEFORE super.onCreate(). BrowsingActivity.onCreate() starts observing
-    // ViewModel LiveData that deliver their current value synchronously, which immediately invokes
-    // our overrides (onWebsiteLoaded -> setToolbarTitle, onToolbarColorSet -> setAppBarColor, ...).
-    // Those touch `binding`, so it must already exist or we crash with
-    // UninitializedPropertyAccessException. The views are usable once inflated, even before
-    // setContentView() attaches them.
-    binding = ActivityWebViewBinding.inflate(layoutInflater)
     super.onCreate(savedInstanceState)
-    setContentView(binding.root)
-
     setupToolbar()
     setupSwipeRefresh()
     setupWebView(savedInstanceState)
@@ -80,8 +69,8 @@ open class WebViewActivity : BrowsingActivity() {
   }
 
   override fun getCurrentUrl(): String {
-    return if (binding.activityWebViewContent.webView.url != null)
-      binding.activityWebViewContent.webView.url!!
+    return if (webView.url != null)
+      webView.url!!
     else super.getCurrentUrl()
   }
 
@@ -94,17 +83,17 @@ open class WebViewActivity : BrowsingActivity() {
   }
 
   private fun setupBottomBar() {
-    menuDelegate.setupBottombar(binding.bottomNavigation)
+    menuDelegate.setupBottombar(bottomNavigation)
   }
 
   override fun onDestroy() {
-    binding.activityWebViewContent.webView.destroy()
+    webView.destroy()
     super.onDestroy()
   }
 
   override fun onBackPressed() {
-    if (binding.activityWebViewContent.webView.canGoBack()) {
-      binding.activityWebViewContent.webView.goBack()
+    if (webView.canGoBack()) {
+      webView.goBack()
     } else {
       super.onBackPressed()
     }
@@ -121,10 +110,12 @@ open class WebViewActivity : BrowsingActivity() {
     setAppBarColor(websiteThemeColor)
   }
 
+  override val layoutRes: Int get() = R.layout.activity_web_view
+
   private fun setupSwipeRefresh() {
-    with(binding.activityWebViewContent.swipeRefreshLayout) {
+    with(swipeRefreshLayout) {
       setOnRefreshListener {
-        binding.activityWebViewContent.webView.reload()
+        webView.reload()
       }
       setColorSchemeColors(
         ContextCompat.getColor(context, R.color.primary),
@@ -134,7 +125,7 @@ open class WebViewActivity : BrowsingActivity() {
   }
 
   private fun setupToolbar() {
-    setSupportActionBar(binding.toolbar)
+    setSupportActionBar(toolbar)
     supportActionBar?.apply {
       setDisplayHomeAsUpEnabled(true)
       setHomeAsUpIndicator(R.drawable.article_ic_close)
@@ -147,7 +138,7 @@ open class WebViewActivity : BrowsingActivity() {
   @SuppressLint("SetJavaScriptEnabled")
   private fun setupWebView(savedInstanceState: Bundle?) {
     try {
-      binding.activityWebViewContent.webView.apply {
+      webView.apply {
         webViewClient = object : WebViewClient() {
           override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
             super.onPageStarted(view, url, favicon)
@@ -173,6 +164,8 @@ open class WebViewActivity : BrowsingActivity() {
             setLoadingProgress(newProgress)
           }
         }
+        // Ported from master d3996723: also enable DOM storage, else window.localStorage is null
+        // and JS-async sites (e.g. jandan comments) fail with "加载失败" despite HTTP 200.
         WebViewConfigurator.configure(settings)
         val previousUrl = savedInstanceState?.getString(EXTRA_CURRENT_LOADING_URL)
         if (previousUrl == null) {
@@ -191,13 +184,13 @@ open class WebViewActivity : BrowsingActivity() {
 
   private fun setToolbarTitle(title: String?) {
     if (!TextUtils.isEmpty(title)) {
-      binding.toolbar.title = title
+      toolbar.title = title
     }
   }
 
   private fun setToolbarSubtitle(subtitle: String?) {
-    if (!TextUtils.isEmpty(subtitle) && binding.toolbar.title != subtitle) {
-      binding.toolbar.subtitle = subtitle
+    if (!TextUtils.isEmpty(subtitle) && toolbar.title != subtitle) {
+      toolbar.subtitle = subtitle
     }
   }
 
@@ -206,7 +199,7 @@ open class WebViewActivity : BrowsingActivity() {
     foregroundColor = ColorUtil.getForegroundWhiteOrBlack(themeColor)
     fgColorStateList = ColorStateList.valueOf(foregroundColor)
 
-    binding.toolbar.apply {
+    toolbar.apply {
       setBackgroundColor(themeColor)
       setTitleTextColor(foregroundColor)
       setSubtitleTextColor(foregroundColor)
@@ -216,33 +209,33 @@ open class WebViewActivity : BrowsingActivity() {
       }
     }
 
-    binding.progressBar.apply {
+    progressBar.apply {
       useIntrinsicPadding = false
       progressBackgroundTintList = ColorStateList.valueOf(themeColor)
       progressTintList = ColorStateList.valueOf(foregroundColor)
     }
 
-    binding.bottomNavigation.background = ColorDrawable(themeColor)
-    binding.bottomNavigation.itemIconTintList = ColorStateList.valueOf(foregroundColor)
-    binding.bottomNavigation.itemTextColor = ColorStateList.valueOf(foregroundColor)
+    bottomNavigation.background = ColorDrawable(themeColor)
+    bottomNavigation.itemIconTintList = ColorStateList.valueOf(foregroundColor)
+    bottomNavigation.itemTextColor = ColorStateList.valueOf(foregroundColor)
 
-    binding.activityWebViewContent.swipeRefreshLayout.setColorSchemeColors(themeColor, ColorUtil.getClosestAccentColor(themeColor))
+    swipeRefreshLayout.setColorSchemeColors(themeColor, ColorUtil.getClosestAccentColor(themeColor))
     if (Utils.ANDROID_LOLLIPOP) {
       window.statusBarColor = ColorUtil.getDarkenedColorForStatusBar(themeColor)
     }
   }
 
   private fun setLoadingProgress(newProgress: Int) {
-    binding.progressBar.setAutoHideProgress(newProgress, fgColorStateList)
+    progressBar.setAutoHideProgress(newProgress, fgColorStateList)
   }
 
 
   private fun showLoading() {
-    binding.activityWebViewContent.swipeRefreshLayout.isRefreshing = true
+    swipeRefreshLayout.isRefreshing = true
   }
 
 
   private fun hideLoading() {
-    binding.activityWebViewContent.swipeRefreshLayout.isRefreshing = false
+    swipeRefreshLayout.isRefreshing = false
   }
 }

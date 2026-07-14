@@ -2,7 +2,7 @@
   ~
   ~  Lynket
   ~
-  ~  Copyright (C) 2023 Arunkumar
+  ~  Copyright (C) 2022 Arunkumar
   ~
   ~  This program is free software: you can redistribute it and/or modify
   ~  it under the terms of the GNU General Public License as published by
@@ -41,9 +41,7 @@
 
   </com.google.android.material.appbar.AppBarLayout>
 
-  <include
-    android:id="@+id/activityPerAppsContent"
-    layout="@layout/activity_per_apps_content" />
+  <include layout="@layout/activity_per_apps_content" />
 
   <!--<com.google.android.material.floatingactionbutton.FloatingActionButton
       android:id="@+id/fab"

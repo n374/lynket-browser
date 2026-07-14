@@ -20,7 +20,6 @@
 
 package arun.com.chromer.bubbles.webheads;
 
-import static android.app.PendingIntent.FLAG_IMMUTABLE;
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK;
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
@@ -97,8 +96,7 @@ import arun.com.chromer.di.service.ServiceComponent;
 import arun.com.chromer.settings.Preferences;
 import arun.com.chromer.shared.Constants;
 import arun.com.chromer.tabs.TabsManager;
-import arun.com.chromer.util.BroadcastReceivers;
-import arun.com.chromer.util.RxSchedulerUtils;
+import arun.com.chromer.util.SchedulerProvider;
 import arun.com.chromer.util.Utils;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -205,13 +203,9 @@ public class WebHeadService extends OverlayService implements WebHeadContract,
         notificationManager.createNotificationChannel(channel);
       }
     }
-    int flags = FLAG_UPDATE_CURRENT;
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-      flags |= FLAG_IMMUTABLE;
-    }
-    final PendingIntent contentIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_STOP_WEBHEAD_SERVICE), flags);
-    final PendingIntent contextActivity = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_OPEN_CONTEXT_ACTIVITY), flags);
-    final PendingIntent newTab = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_OPEN_NEW_TAB), flags);
+    final PendingIntent contentIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_STOP_WEBHEAD_SERVICE), FLAG_UPDATE_CURRENT);
+    final PendingIntent contextActivity = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_OPEN_CONTEXT_ACTIVITY), FLAG_UPDATE_CURRENT);
+    final PendingIntent newTab = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_OPEN_NEW_TAB), FLAG_UPDATE_CURRENT);
     Notification notification = new NotificationCompat.Builder(this, WebHeadService.class.getName())
       .setSmallIcon(R.drawable.ic_chromer_notification)
       .setPriority(PRIORITY_MIN)
@@ -337,7 +331,7 @@ public class WebHeadService extends OverlayService implements WebHeadContract,
     //noinspection Convert2MethodRef
     subs.add(websiteObservable
       .filter(website -> website != null)
-      .compose(RxSchedulerUtils.applyIoSchedulers())
+      .compose(SchedulerProvider.applyIoSchedulers())
       .doOnNext(website -> {
         final WebHead webHead = webHeads.get(webHeadUrl);
         if (webHead != null) {
@@ -582,12 +576,13 @@ public class WebHeadService extends OverlayService implements WebHeadContract,
     notificationFilter.addAction(ACTION_STOP_WEBHEAD_SERVICE);
     notificationFilter.addAction(ACTION_OPEN_CONTEXT_ACTIVITY);
     notificationFilter.addAction(ACTION_OPEN_NEW_TAB);
-    // These are app-internal broadcasts (fired by our own foreground-notification PendingIntents),
-    // so the receiver must be RECEIVER_NOT_EXPORTED. On Android 13+ (API 33+) registering a receiver
-    // for non-system broadcasts without specifying exported-ness throws SecurityException, which
-    // under targetSdk 35 crashed WebHeadService on creation and broke Bubble mode entirely.
-    // Registration goes through the unit-tested BroadcastReceivers helper.
-    BroadcastReceivers.registerNotExported(this, notificationActionReceiver, notificationFilter);
+    // Ported from master a2c01085: these are app-internal broadcasts (fired by our own
+    // foreground-notification PendingIntents), so the receiver must be RECEIVER_NOT_EXPORTED.
+    // On Android 13+ (API 33+) registering a receiver for non-system broadcasts without
+    // specifying exported-ness throws SecurityException, which under targetSdk 35 crashed
+    // WebHeadService on creation and broke Bubble (web-head) mode entirely.
+    ContextCompat.registerReceiver(
+        this, notificationActionReceiver, notificationFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
   }
 
   private void unregisterReceivers() {

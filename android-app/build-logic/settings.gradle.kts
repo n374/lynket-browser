@@ -2,7 +2,7 @@
  *
  *  Lynket
  *
- *  Copyright (C) 2023 Arunkumar
+ *  Copyright (C) 2022 Arunkumar
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,11 +29,17 @@ pluginManagement {
     id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.6.0"
   }
 }
+enableFeaturePreview("VERSION_CATALOGS")
 
 dependencyResolutionManagement {
   repositories {
     google()
     mavenCentral()
     gradlePluginPortal()
+  }
+  versionCatalogs {
+    create("deps") {
+      from(files("../gradle/libs.versions.toml"))
+    }
   }
 }

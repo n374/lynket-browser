@@ -31,12 +31,16 @@ import android.view.View
 import android.widget.Toast
 import arun.com.chromer.R
 import arun.com.chromer.data.website.model.Website
-import arun.com.chromer.databinding.ActivityNewTabBinding
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.extenstions.showKeyboard
 import arun.com.chromer.shared.base.activity.BaseActivity
 import arun.com.chromer.tabs.TabsManager
+import butterknife.ButterKnife
+import butterknife.Unbinder
 import com.afollestad.materialdialogs.MaterialDialog
+import kotlinx.android.extensions.LayoutContainer
+import kotlinx.android.synthetic.*
+import kotlinx.android.synthetic.main.activity_new_tab.*
 import rx.subscriptions.CompositeSubscription
 import javax.inject.Inject
 
@@ -72,12 +76,14 @@ class NewTabDialogActivity : BaseActivity() {
 
   inner class NewTabDialog(
     private var activity: Activity?
-  ) : DialogInterface.OnDismissListener {
+  ) : DialogInterface.OnDismissListener, LayoutContainer {
+
+    override val containerView: View? get() = dialog.customView
 
     val subs = CompositeSubscription()
 
+    private lateinit var unbinder: Unbinder
     private lateinit var dialog: MaterialDialog
-    private var dialogBinding: ActivityNewTabBinding? = null
 
     fun show(): NewTabDialog {
       dialog = MaterialDialog.Builder(activity!!)
@@ -91,9 +97,9 @@ class NewTabDialogActivity : BaseActivity() {
         diaWindow.setGravity(Gravity.BOTTOM)
       }
 
-      dialogBinding = ActivityNewTabBinding.bind(dialog.customView!!)
+      unbinder = ButterKnife.bind(this, dialog.customView!!)
 
-      dialogBinding!!.materialSearchView.apply {
+      materialSearchView.apply {
         searchPerforms()
           .takeUntil(lifecycleEvents.destroys)
           .subscribe { url ->
@@ -132,14 +138,15 @@ class NewTabDialogActivity : BaseActivity() {
     }
 
     override fun onDismiss(dialogInterface: DialogInterface?) {
+      clearFindViewByIdCache()
       subs.clear()
       activity?.finish()
       activity = null
-      dialogBinding = null
+      unbinder.unbind()
     }
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-      dialogBinding?.materialSearchView?.onActivityResult(requestCode, resultCode, data)
+      materialSearchView?.onActivityResult(requestCode, resultCode, data)
     }
   }
 }

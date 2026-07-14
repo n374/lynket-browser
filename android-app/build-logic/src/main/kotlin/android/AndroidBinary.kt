@@ -2,7 +2,7 @@
  *
  *  Lynket
  *
- *  Copyright (C) 2023 Arunkumar
+ *  Copyright (C) 2022 Arunkumar
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@ public class AndroidBinary : ConfigurablePlugin({
   androidCommon()
 
   configure<ApplicationExtension> {
-    namespace = ANDROID_PACKAGE_NAME
     defaultConfig {
       applicationId = ANDROID_PACKAGE_NAME
       versionCode = ANDROID_VERSION_CODE

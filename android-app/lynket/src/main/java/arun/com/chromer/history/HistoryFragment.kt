@@ -21,9 +21,7 @@
 package arun.com.chromer.history
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
@@ -33,7 +31,6 @@ import androidx.recyclerview.widget.ItemTouchHelper.RIGHT
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import arun.com.chromer.R
-import arun.com.chromer.databinding.FragmentHistoryBinding
 import arun.com.chromer.di.fragment.FragmentComponent
 import arun.com.chromer.settings.Preferences
 import arun.com.chromer.settings.browsingoptions.BrowsingOptionsActivity
@@ -47,6 +44,7 @@ import arun.com.chromer.util.Utils
 import com.afollestad.materialdialogs.MaterialDialog
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
+import kotlinx.android.synthetic.main.fragment_history.*
 import rx.Emitter
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
@@ -57,9 +55,6 @@ import javax.inject.Inject
  * Created by arunk on 07-04-2017.
  */
 class HistoryFragment : BaseFragment(), Snackable, FabHandler {
-
-  private var _binding: FragmentHistoryBinding? = null
-  private val binding get() = _binding!!
 
   @Inject
   lateinit var viewModelFactory: ViewModelProvider.Factory
@@ -104,28 +99,12 @@ class HistoryFragment : BaseFragment(), Snackable, FabHandler {
       }
     }
 
-  override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
-  ): View {
-    _binding = FragmentHistoryBinding.inflate(inflater, container, false)
-    return super.onCreateView(inflater, container, savedInstanceState).also {
-      return binding.root
-    }
-  }
-
-  override fun onDestroyView() {
-    super.onDestroyView()
-    _binding = null
-  }
-
   override fun snack(message: String) = (activity as Snackable).snack(message)
 
   override fun snackLong(message: String) = (activity as Snackable).snackLong(message)
 
   fun loading(loading: Boolean) {
-    binding.swipeRefreshLayout.isRefreshing = loading
+    swipeRefreshLayout.isRefreshing = loading
   }
 
   override fun onHiddenChanged(hidden: Boolean) {
@@ -158,24 +137,24 @@ class HistoryFragment : BaseFragment(), Snackable, FabHandler {
   }
 
   private fun setupIncognitoSwitch() {
-    binding.historyCard.setOnClickListener { binding.historySwitch.performClick() }
-    binding.historySwitch.setOnCheckedChangeListener { _, isChecked ->
+    historyCard.setOnClickListener { historySwitch.performClick() }
+    historySwitch.setOnCheckedChangeListener { _, isChecked ->
       preferences.historyDisabled(!isChecked)
       if (isChecked) {
-        binding.fullIncognitoModeSwitch.isChecked = false
+        fullIncognitoModeSwitch.isChecked = false
       }
     }
-    binding.enableHistorySubtitle.text = formattedMessage
-    binding.historyIcon.setImageDrawable(historyImg)
+    enableHistorySubtitle.text = formattedMessage
+    historyIcon.setImageDrawable(historyImg)
 
-    binding.fullIncognitoIcon.setImageDrawable(incognitoImg)
-    binding.fullIncognitoModeCard.setOnClickListener { binding.fullIncognitoModeSwitch.performClick() }
-    binding.fullIncognitoModeSwitch.isChecked = preferences.fullIncognitoMode()
-    binding.fullIncognitoModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+    fullIncognitoIcon.setImageDrawable(incognitoImg)
+    fullIncognitoModeCard.setOnClickListener { fullIncognitoModeSwitch.performClick() }
+    fullIncognitoModeSwitch.isChecked = preferences.fullIncognitoMode()
+    fullIncognitoModeSwitch.setOnCheckedChangeListener { _, isChecked ->
       preferences.fullIncognitoMode(isChecked)
       if (isChecked) {
-        binding.historySwitch.isChecked = false
-        binding.fullIncognitoModeSwitch.postDelayed({ showIncognitoDialogExplanation() }, 200)
+        historySwitch.isChecked = false
+        fullIncognitoModeSwitch.postDelayed({ showIncognitoDialogExplanation() }, 200)
       }
       rxEventBus.post(BrowsingOptionsActivity.ProviderChanged())
     }
@@ -195,8 +174,8 @@ class HistoryFragment : BaseFragment(), Snackable, FabHandler {
 
   private fun setupHistoryList() {
     val linearLayoutManager = LinearLayoutManager(activity)
-    binding.historyList.apply {
-      binding.historyList.layoutManager = linearLayoutManager
+    historyList.apply {
+      historyList.layoutManager = linearLayoutManager
       adapter = historyAdapter
     }
 
@@ -215,14 +194,14 @@ class HistoryFragment : BaseFragment(), Snackable, FabHandler {
       .observeOn(AndroidSchedulers.mainThread())
       .subscribe { hasItems ->
         if (hasItems) {
-          binding.error.visibility = View.GONE
+          error.visibility = View.GONE
         } else {
-          binding.error.visibility = View.VISIBLE
+          error.visibility = View.VISIBLE
         }
       })
 
 
-    binding.swipeRefreshLayout.apply {
+    swipeRefreshLayout.apply {
       setColorSchemeColors(
         ContextCompat.getColor(context!!, R.color.colorPrimary),
         ContextCompat.getColor(context!!, R.color.accent)
@@ -244,7 +223,7 @@ class HistoryFragment : BaseFragment(), Snackable, FabHandler {
         viewHolder: RecyclerView.ViewHolder,
         direction: Int
       ) = viewModel.deleteHistory(historyAdapter.getItemAt(viewHolder.adapterPosition))
-    }).attachToRecyclerView(binding.historyList)
+    }).attachToRecyclerView(historyList)
   }
 
   private fun loadHistory() {
@@ -256,7 +235,7 @@ class HistoryFragment : BaseFragment(), Snackable, FabHandler {
   override fun onResume() {
     super.onResume()
     loadHistory()
-    binding.historySwitch.isChecked = !preferences.historyDisabled()
+    historySwitch.isChecked = !preferences.historyDisabled()
   }
 
   override fun onFabClick() {

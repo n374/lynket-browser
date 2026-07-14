@@ -41,7 +41,7 @@ import arun.com.chromer.R
 import arun.com.chromer.browsing.webview.EmbeddableWebViewActivity
 import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.Utils
-import dev.arunkumar.android.common.dpToPx
+import dev.arunkumar.common.context.dpToPx
 import io.reactivex.Single
 import timber.log.Timber
 import javax.inject.Inject
@@ -132,19 +132,12 @@ constructor(
       ?.let(Icon::createWithAdaptiveBitmap)
       ?: bubbleData.fallbackIcon()
 
-    // Derive the expanded-bubble height from the *maximum* window metrics, which are
-    // independent of the current window state. desiredHeight is baked into the bubble
-    // when the notification is (re)posted, so if we read a height that shrinks with the
-    // current insets the bubble is permanently created short.
-    //
-    // Confirmed on-device (Pixel 8 Pro, Android 17): both the old
-    // `0.8 * defaultDisplay.getSize()` and getCurrentWindowMetrics() return the
-    // *currently available* height, so a bubble opened while the keyboard was up was
-    // created at ~0.6x the screen height (desiredHeight 488dp vs 797dp) and stayed
-    // short — this is the "bubble height varies / got shorter on reopen" bug.
-    // getMaximumWindowMetrics() (API 30+) / getRealSize() return the full physical
-    // display height regardless of IME, split-screen or insets, so every bubble gets
-    // the same stable full height.
+    // Ported from master commit 0ba62490 (user fix): read the MAXIMUM window metrics so the
+    // expanded bubble height is the full physical display height, independent of IME /
+    // split-screen / insets. The old `0.8 * defaultDisplay.getSize()` (and getCurrentWindow
+    // Metrics) return the *currently available* height, so a bubble created while the keyboard
+    // was up was baked short (e.g. desiredHeight 488dp vs 797dp on Pixel 8 Pro/Android 17) and
+    // stayed short on every reopen. maximumWindowMetrics / getRealSize give a stable full height.
     val windowManager = application.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     @Suppress("DEPRECATION")
     val displayHeight = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -168,7 +161,12 @@ constructor(
         .setIntent(viewIntent)
         .setPerson(
           PersonCompat.Builder()
-            .setBot(true)
+            // Spike RAS-38 (conversation gate): on targetSdk >= R the platform's
+            // BubbleExtractor requires record.isConversation()==true, and
+            // NotificationRecord.isConversation() rejects a MessagingStyle notif whose
+            // shortcut person isOnlyBots(). setBot(true) here was exactly what made
+            // Lynket's bubble judged "non-conversation" and dropped. Must be non-bot.
+            .setBot(false)
             .setName(website.safeLabel())
             .setImportant(true)
             .build()
@@ -182,6 +180,9 @@ constructor(
       // Shortcut-backed metadata is the supported path on API 30+.
       Notification.BubbleMetadata.Builder(shortcutId)
         .setDesiredHeight(desiredHeight)
+        // Spike RAS-38 (per user request): keep the bubble COLLAPSED on arrival — it floats
+        // as a bubble icon and only expands when the user taps it. Auto-expand was tried and
+        // works (needs a foreground post), but the desired UX is tap-to-open, so keep false.
         .setAutoExpandBubble(false)
         .setSuppressNotification(true)
         .build()
@@ -192,6 +193,7 @@ constructor(
         .setIcon(bubbleIcon)
         .setIntent(bubbleIntent)
         .setDesiredHeight(desiredHeight)
+        // Spike RAS-38 (per user request): collapsed on arrival, tap-to-expand. See R+ branch.
         .setAutoExpandBubble(false)
         .setSuppressNotification(true)
         .build()
@@ -228,7 +230,9 @@ constructor(
       // https://developer.android.com/guide/topics/ui/bubbles#when_bubbles_appear
       setCategory(Notification.CATEGORY_CALL)
       style = Notification.MessagingStyle(addPerson {
-        setBot(true)
+        // Spike RAS-38: same conversation gate as the shortcut person above — the
+        // MessagingStyle "self" person must not be a bot or isConversation() returns false.
+        setBot(false)
         setIcon(bubbleIcon)
         setName(website.safeLabel())
         setImportant(true)
@@ -243,7 +247,7 @@ constructor(
 
 
   private fun BubbleLoadData.fallbackIcon(): Icon = if (color != Constants.NO_COLOR) {
-    val iconSize = 108.dpToPx()
+    val iconSize = application.dpToPx(108.0)
     Icon.createWithAdaptiveBitmap(
       ColorDrawable(color).toBitmap(
         width = iconSize,
@@ -258,7 +262,7 @@ constructor(
   private fun BubbleLoadData.bubbleIconCompat(): IconCompat = icon
     ?.let(IconCompat::createWithAdaptiveBitmap)
     ?: if (color != Constants.NO_COLOR) {
-      val iconSize = 108.dpToPx()
+      val iconSize = application.dpToPx(108.0)
       IconCompat.createWithAdaptiveBitmap(
         ColorDrawable(color).toBitmap(
           width = iconSize,

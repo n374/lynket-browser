@@ -1,20 +1,21 @@
 /*
- * Lynket
  *
- * Copyright (C) 2026 Arunkumar
+ *  Lynket
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Copyright (C) 2026 Arunkumar
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package arun.com.chromer.browsing.webview
@@ -30,15 +31,14 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Verifies the WebView browsing settings that fix JS-async content (e.g. jandan's comment widget)
- * failing to load in WebView mode.
+ * Ported from master (WebViewConfiguratorTest), adapted to spike's Robolectric 4.3 (sdk 21).
  *
- * Root cause: with DOM Storage disabled (the WebView default), `window.localStorage` is null and
- * page scripts that touch it throw, aborting comment rendering ("加载失败"). [WebViewConfigurator]
- * must enable both JavaScript and DOM Storage.
+ * Verifies [WebViewConfigurator.configure] enables both JavaScript and DOM Storage. With DOM
+ * Storage disabled (the WebView default), window.localStorage is null and JS-async pages (e.g.
+ * jandan's comment widget) throw and show "加载失败". See WebViewConfigurator kdoc.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [30], application = LynketTestApplication::class)
+@Config(sdk = [23], application = LynketTestApplication::class)
 class WebViewConfiguratorTest {
 
   @Test

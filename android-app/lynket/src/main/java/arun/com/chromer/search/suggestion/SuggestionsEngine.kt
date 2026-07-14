@@ -20,6 +20,7 @@
 
 package arun.com.chromer.search.suggestion
 
+import `in`.arunkumarsampath.suggestions.RxSuggestions.suggestionsTransformer
 import android.app.Application
 import arun.com.chromer.R
 import arun.com.chromer.data.history.HistoryRepository
@@ -137,7 +138,7 @@ constructor(
       if (!Utils.isOnline(application)) {
         Flowable.just(emptyList())
       } else upstream
-        .compose(toV2Transformer(GoogleSuggestionsApi.suggestionsTransformer(5)))
+        .compose(toV2Transformer(suggestionsTransformer(5)))
         .doOnError(Timber::e)
         .map<List<SuggestionItem>> {
           it.map { query -> GoogleSuggestionItem(query) }

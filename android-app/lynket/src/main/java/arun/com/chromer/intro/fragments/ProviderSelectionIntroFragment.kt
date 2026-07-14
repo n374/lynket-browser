@@ -22,28 +22,25 @@ package arun.com.chromer.intro.fragments
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import arun.com.chromer.R
 import arun.com.chromer.browsing.providerselection.ProviderSelectionActivity
-import arun.com.chromer.databinding.FragmentProviderSelectionIntroBinding
 import arun.com.chromer.di.fragment.FragmentComponent
 import arun.com.chromer.shared.base.fragment.BaseFragment
 import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.util.glide.GlideApp
+import butterknife.OnClick
 import com.github.paolorotolo.appintro.ISlideBackgroundColorHolder
+import kotlinx.android.synthetic.main.fragment_slide_over_intro.*
 import javax.inject.Inject
 
 open class ProviderSelectionIntroFragment : BaseFragment(), ISlideBackgroundColorHolder {
-  private var _binding: FragmentProviderSelectionIntroBinding? = null
-  private val binding get() = _binding!!
 
   override fun getDefaultBackgroundColor(): Int =
-    ContextCompat.getColor(requireContext(), R.color.tutorialBackgrounColor)
+    ContextCompat.getColor(context!!, R.color.tutorialBackgrounColor)
 
   override fun setBackgroundColor(backgroundColor: Int) {
-    _binding?.root?.setBackgroundColor(backgroundColor)
+    root.setBackgroundColor(backgroundColor)
   }
 
   @Inject
@@ -54,24 +51,13 @@ open class ProviderSelectionIntroFragment : BaseFragment(), ISlideBackgroundColo
   override val layoutRes: Int
     get() = R.layout.fragment_provider_selection_intro
 
-  override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
-  ) = FragmentProviderSelectionIntroBinding.inflate(inflater, container, false).also {
-    _binding = it
-  }.root
-
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-    GlideApp.with(this).load(R.drawable.tutorial_choose_browser).into(binding.imageView)
-    binding.chooseProviderButton.setOnClickListener {
-      startActivity(Intent(context, ProviderSelectionActivity::class.java))
-    }
+    GlideApp.with(this).load(R.drawable.tutorial_choose_browser).into(imageView!!)
   }
 
-  override fun onDestroyView() {
-    super.onDestroyView()
-    _binding = null
+  @OnClick(R.id.chooseProviderButton)
+  fun chooseProviderButton() {
+    startActivity(Intent(context, ProviderSelectionActivity::class.java))
   }
 }

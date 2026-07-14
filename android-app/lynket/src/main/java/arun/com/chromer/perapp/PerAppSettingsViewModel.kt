@@ -24,7 +24,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import arun.com.chromer.data.apps.AppRepository
 import arun.com.chromer.data.common.App
-import arun.com.chromer.util.RxSchedulerUtils
+import arun.com.chromer.util.SchedulerProvider
 import rx.android.schedulers.AndroidSchedulers
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
@@ -32,13 +32,9 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * ViewModel for Per-App Settings screen.
- *
- * Migrated to Hilt: Uses @HiltViewModel annotation for automatic ViewModel injection.
- * Retains RxJava 1.x for now (will be migrated to Flows in future phase).
- *
- * Manages per-app settings for blacklist and incognito mode.
+ * Created by arunk on 10-02-2018.
  */
+
 class PerAppSettingsViewModel
 @Inject
 constructor(private val appRepository: AppRepository) : ViewModel() {
@@ -62,7 +58,7 @@ constructor(private val appRepository: AppRepository) : ViewModel() {
     subs.add(loadingQueue.asObservable()
       .onBackpressureLatest()
       .doOnNext { loading(true) }
-      .concatMap { appRepository.allApps().compose(RxSchedulerUtils.applyIoSchedulers()) }
+      .concatMap { appRepository.allApps().compose(SchedulerProvider.applyIoSchedulers()) }
       .doOnNext { loading(false) }
       .subscribe({ apps ->
         Timber.d("Apps loaded ${apps.size}")
@@ -79,10 +75,10 @@ constructor(private val appRepository: AppRepository) : ViewModel() {
       .concatMap { (packageName, incognito) ->
         if (incognito) {
           appRepository.setPackageIncognito(packageName)
-            .compose(RxSchedulerUtils.applyIoSchedulers())
+            .compose(SchedulerProvider.applyIoSchedulers())
         } else {
           appRepository.removeIncognito(packageName)
-            .compose(RxSchedulerUtils.applyIoSchedulers())
+            .compose(SchedulerProvider.applyIoSchedulers())
         }
       }.observeOn(AndroidSchedulers.mainThread())
       .doOnNext { loading(false) }
@@ -103,10 +99,10 @@ constructor(private val appRepository: AppRepository) : ViewModel() {
       .concatMap { (packageName, blacklisted) ->
         if (blacklisted) {
           appRepository.setPackageBlacklisted(packageName)
-            .compose(RxSchedulerUtils.applyIoSchedulers())
+            .compose(SchedulerProvider.applyIoSchedulers())
         } else {
           appRepository.removeBlacklist(packageName)
-            .compose(RxSchedulerUtils.applyIoSchedulers())
+            .compose(SchedulerProvider.applyIoSchedulers())
         }
       }.observeOn(AndroidSchedulers.mainThread())
       .doOnNext { loading(false) }

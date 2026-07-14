@@ -2,7 +2,7 @@
   ~
   ~  Lynket
   ~
-  ~  Copyright (C) 2023 Arunkumar
+  ~  Copyright (C) 2022 Arunkumar
   ~
   ~  This program is free software: you can redistribute it and/or modify
   ~  it under the terms of the GNU General Public License as published by
@@ -44,6 +44,6 @@
 
   <include layout="@layout/activity_browsing_options_content" />
 
-  <!-- Bottom sheet is now shown programmatically via BottomSheetDialogFragment -->
+  <include layout="@layout/widget_bottom_sheet_layout" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

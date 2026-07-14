@@ -2,7 +2,7 @@
  *
  *  Lynket
  *
- *  Copyright (C) 2023 Arunkumar
+ *  Copyright (C) 2022 Arunkumar
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import org.gradle.kotlin.dsl.getByType
 
 internal val Project.catalogs get() = extensions.getByType<VersionCatalogsExtension>()
 
-internal val Project.deps: VersionCatalog get() = catalogs.named("libs")
+internal val Project.deps: VersionCatalog get() = catalogs.named("deps")
 
 internal fun VersionCatalog.version(reference: String): String? = findVersion(reference)
   .orElse(null)

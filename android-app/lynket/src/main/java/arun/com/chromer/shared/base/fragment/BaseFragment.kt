@@ -39,7 +39,7 @@ abstract class BaseFragment : Fragment() {
 
   protected val subs = CompositeSubscription()
   private lateinit var fragmentComponent: FragmentComponent
-  private var unbinder: Unbinder? = null
+  private lateinit var unbinder: Unbinder
 
   protected abstract fun inject(fragmentComponent: FragmentComponent)
 
@@ -69,7 +69,7 @@ abstract class BaseFragment : Fragment() {
 
   override fun onDestroy() {
     subs.clear()
-    unbinder?.unbind()
+    unbinder.unbind()
     super.onDestroy()
   }
 }

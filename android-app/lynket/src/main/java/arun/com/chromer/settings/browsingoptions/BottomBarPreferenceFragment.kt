@@ -64,8 +64,8 @@ class BottomBarPreferenceFragment : BasePreferenceFragment(),
     updatePreferenceSummary(MINIMIZE_BEHAVIOR_PREFERENCE)
   }
 
-  override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-    key?.let { updatePreferenceSummary(it) }
+  override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+    updatePreferenceSummary(key)
   }
 
   companion object {

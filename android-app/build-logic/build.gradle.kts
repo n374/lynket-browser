@@ -2,7 +2,7 @@
  *
  *  Lynket
  *
- *  Copyright (C) 2023 Arunkumar
+ *  Copyright (C) 2022 Arunkumar
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -55,7 +55,12 @@ gradlePlugin {
 }
 
 dependencies {
-  implementation("com.android.tools.build:gradle:8.3.0-alpha18")
-  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
+  implementation(deps.gradle.dependency.updates)
+  implementation(deps.agp)
+  implementation(deps.kotlin)
+  implementation(deps.spotless)
+  implementation(deps.dokka)
+  implementation(deps.nexus.publish)
+  implementation(deps.kotlinx.binaryvalidator)
   implementation("gradle.plugin.dev.arunkumar:scabbard-gradle-plugin:0.5.0")
 }

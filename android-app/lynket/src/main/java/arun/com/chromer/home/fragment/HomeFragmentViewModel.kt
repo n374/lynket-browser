@@ -30,13 +30,7 @@ import rx.subscriptions.CompositeSubscription
 import javax.inject.Inject
 
 /**
- * Legacy ViewModel for HomeFragment (XML-based UI).
- *
- * Migrated to Hilt: Uses @HiltViewModel annotation for automatic ViewModel injection.
- * Retains RxJava 1.x for now (will be migrated to Flows in future phase).
- *
- * Note: Modern Compose UI uses ModernHomeViewModel instead.
- * Most functionality is commented out but retained for backward compatibility.
+ * Created by arunk on 14-01-2018.
  */
 class HomeFragmentViewModel
 @Inject

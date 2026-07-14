@@ -2,7 +2,7 @@
  *
  *  Lynket
  *
- *  Copyright (C) 2023 Arunkumar
+ *  Copyright (C) 2022 Arunkumar
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@ import ANDROID_DEBUG_VARIANT
 import ANDROID_MIN_SDK
 import ANDROID_RELEASE_VARIANT
 import ANDROID_TARGET_SDK
+import gradle.deps
+import gradle.version
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
@@ -85,7 +87,7 @@ internal fun Project.androidCommon() {
     }
 
     composeOptions {
-      kotlinCompilerExtensionVersion = "1.5.4"
+      kotlinCompilerExtensionVersion = deps.version("compose")!!
     }
 
     packagingOptions {

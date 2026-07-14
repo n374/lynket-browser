@@ -24,7 +24,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import arun.com.chromer.data.history.HistoryRepository
 import arun.com.chromer.data.website.model.Website
-import arun.com.chromer.util.RxSchedulerUtils
+import arun.com.chromer.util.SchedulerProvider
 import rx.Observable
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
@@ -32,12 +32,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Legacy ViewModel for HistoryFragment (XML-based UI).
- *
- * Migrated to Hilt: Uses @HiltViewModel annotation for automatic ViewModel injection.
- * Retains RxJava 1.x for now (will be migrated to Flows in future phase).
- *
- * Note: Modern Compose UI uses ModernHistoryViewModel instead.
+ * Created by arunk on 14-01-2018.
  */
 class HistoryFragmentViewModel
 @Inject
@@ -57,7 +52,7 @@ constructor(
              .switchMap {
                  historyRepository
                          .allItemsCursor
-                         .compose(RxSchedulerUtils.applyIoSchedulers())
+                         .compose(SchedulerProvider.applyIoSchedulers())
              }.doOnNext { loadingLiveData.postValue(false) }
              .doOnNext(historyCursorLiveData::postValue)
              .subscribe())*/
@@ -71,7 +66,7 @@ constructor(
     subs.add(
       historyRepository
         .deleteAll()
-        .compose(RxSchedulerUtils.applyIoSchedulers())
+        .compose(SchedulerProvider.applyIoSchedulers())
         .doOnNext { rows ->
           loadHistory()
           onSuccess(rows)
@@ -83,7 +78,7 @@ constructor(
     subs.add(Observable.just(website)
       .filter { webSite -> webSite?.url != null }
       .flatMap { historyRepository.delete(it!!) }
-      .compose(RxSchedulerUtils.applyIoSchedulers())
+      .compose(SchedulerProvider.applyIoSchedulers())
       .doOnError(Timber::e)
       .doOnNext { loadHistory() }
       .subscribe())

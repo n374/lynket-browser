@@ -30,8 +30,6 @@ import androidx.recyclerview.widget.RecyclerView
 import arun.com.chromer.R
 import arun.com.chromer.browsing.openwith.OpenIntentWithActivity
 import arun.com.chromer.data.website.model.Website
-import arun.com.chromer.databinding.ActivityMoreMenuBinding
-import arun.com.chromer.databinding.ActivityMoreMenuItemTemplateBinding
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.history.HistoryActivity
 import arun.com.chromer.settings.SettingsGroupActivity
@@ -42,12 +40,14 @@ import arun.com.chromer.shortcuts.HomeScreenShortcutCreatorActivity
 import arun.com.chromer.tabs.TabsManager
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
+import kotlinx.android.extensions.LayoutContainer
+import kotlinx.android.synthetic.main.activity_more_menu.*
+import kotlinx.android.synthetic.main.activity_more_menu_item_template.*
 import javax.inject.Inject
 
 
 class ChromerOptionsActivity : BaseActivity() {
 
-  private lateinit var binding: ActivityMoreMenuBinding
   private var fromArticle: Boolean = false
 
   @Inject
@@ -58,11 +58,9 @@ class ChromerOptionsActivity : BaseActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    binding = ActivityMoreMenuBinding.inflate(layoutInflater)
-    setContentView(binding.root)
     fromArticle = intent.getBooleanExtra(EXTRA_KEY_FROM_ARTICLE, false)
-    binding.moreMenuList.layoutManager = LinearLayoutManager(this)
-    binding.moreMenuList.adapter = MenuListAdapter()
+    moreMenuList.layoutManager = LinearLayoutManager(this)
+    moreMenuList.adapter = MenuListAdapter()
   }
 
 
@@ -99,27 +97,26 @@ class ChromerOptionsActivity : BaseActivity() {
     override fun onCreateViewHolder(
       parent: ViewGroup,
       viewType: Int
-    ): MenuItemHolder {
-      val binding = ActivityMoreMenuItemTemplateBinding.inflate(
-        LayoutInflater.from(parent.context),
+    ) = MenuItemHolder(
+      LayoutInflater.from(parent.context).inflate(
+        R.layout.activity_more_menu_item_template,
         parent,
         false
       )
-      return MenuItemHolder(binding)
-    }
+    )
 
 
     override fun onBindViewHolder(holder: MenuItemHolder, position: Int) {
       val activity = this@ChromerOptionsActivity
       when (items[position]) {
         settings -> {
-          holder.binding.menuImage.setImageDrawable(
+          holder.menu_image.setImageDrawable(
             IconicsDrawable(holder.itemView.context)
               .icon(CommunityMaterial.Icon.cmd_settings)
               .colorRes(R.color.accent)
               .sizeDp(24)
           )
-          holder.binding.menuText.setText(R.string.settings)
+          holder.menu_text.setText(R.string.settings)
           holder.itemView.setOnClickListener {
             startActivity(
               Intent(
@@ -131,29 +128,29 @@ class ChromerOptionsActivity : BaseActivity() {
           }
         }
         tabs -> {
-          holder.binding.menuImage.setImageResource(R.drawable.ic_tabs_24dp)
-          holder.binding.menuText.setText(R.string.title_tabs)
+          holder.menu_image.setImageResource(R.drawable.ic_tabs_24dp)
+          holder.menu_text.setText(R.string.title_tabs)
           holder.itemView.setOnClickListener {
             tabsManager.showTabsActivity()
             activity.finish()
           }
         }
         newTab -> {
-          holder.binding.menuImage.setImageResource(R.drawable.ic_plus_24dp)
-          holder.binding.menuText.setText(R.string.new_tab_text)
+          holder.menu_image.setImageResource(R.drawable.ic_plus_24dp)
+          holder.menu_text.setText(R.string.new_tab_text)
           holder.itemView.setOnClickListener {
             tabsManager.openNewTab(activity, "")
             activity.finish()
           }
         }
         history -> {
-          holder.binding.menuImage.setImageDrawable(
+          holder.menu_image.setImageDrawable(
             IconicsDrawable(holder.itemView.context)
               .icon(CommunityMaterial.Icon.cmd_history)
               .colorRes(R.color.accent)
               .sizeDp(24)
           )
-          holder.binding.menuText.setText(R.string.title_history)
+          holder.menu_text.setText(R.string.title_history)
           holder.itemView.setOnClickListener {
             startActivity(
               Intent(
@@ -165,13 +162,13 @@ class ChromerOptionsActivity : BaseActivity() {
           }
         }
         addToHomeScreen -> {
-          holder.binding.menuImage.setImageDrawable(
+          holder.menu_image.setImageDrawable(
             IconicsDrawable(holder.itemView.context)
               .icon(CommunityMaterial.Icon.cmd_home_variant)
               .colorRes(R.color.accent)
               .sizeDp(24)
           )
-          holder.binding.menuText.setText(R.string.add_to_homescreen)
+          holder.menu_text.setText(R.string.add_to_homescreen)
           holder.itemView.setOnClickListener {
             startActivity(
               Intent(
@@ -183,13 +180,13 @@ class ChromerOptionsActivity : BaseActivity() {
           }
         }
         openWith -> {
-          holder.binding.menuImage.setImageDrawable(
+          holder.menu_image.setImageDrawable(
             IconicsDrawable(holder.itemView.context)
               .icon(CommunityMaterial.Icon.cmd_open_in_new)
               .colorRes(R.color.accent)
               .sizeDp(24)
           )
-          holder.binding.menuText.setText(R.string.open_with)
+          holder.menu_text.setText(R.string.open_with)
           holder.itemView.setOnClickListener {
             startActivity(Intent(activity, OpenIntentWithActivity::class.java).apply {
               data = intent.data
@@ -199,13 +196,13 @@ class ChromerOptionsActivity : BaseActivity() {
           }
         }
         article -> {
-          holder.binding.menuImage.setImageDrawable(
+          holder.menu_image.setImageDrawable(
             IconicsDrawable(holder.itemView.context)
               .icon(CommunityMaterial.Icon.cmd_file_document)
               .colorRes(R.color.accent)
               .sizeDp(24)
           )
-          holder.binding.menuText.setText(R.string.open_article_view)
+          holder.menu_text.setText(R.string.open_article_view)
           holder.itemView.setOnClickListener {
             tabsManager.openArticle(
               activity,
@@ -219,7 +216,7 @@ class ChromerOptionsActivity : BaseActivity() {
 
     override fun getItemCount() = items.size
 
-    inner class MenuItemHolder(val binding: ActivityMoreMenuItemTemplateBinding) :
-      RecyclerView.ViewHolder(binding.root)
+    inner class MenuItemHolder(override val containerView: View) :
+      RecyclerView.ViewHolder(containerView), LayoutContainer
   }
 }

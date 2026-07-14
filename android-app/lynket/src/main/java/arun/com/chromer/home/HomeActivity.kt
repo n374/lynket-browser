@@ -23,14 +23,16 @@ package arun.com.chromer.home
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.postDelayed
+import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.SimpleItemAnimator
 import arun.com.chromer.R
 import arun.com.chromer.about.changelog.Changelog
 import arun.com.chromer.data.website.model.Website
-import arun.com.chromer.databinding.ActivityMainBinding
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.extenstions.gone
 import arun.com.chromer.extenstions.show
@@ -44,22 +46,23 @@ import arun.com.chromer.shared.base.Snackable
 import arun.com.chromer.shared.base.activity.BaseActivity
 import arun.com.chromer.tabs.TabsManager
 import arun.com.chromer.tips.TipsActivity
-import arun.com.chromer.util.EdgeToEdge
 import arun.com.chromer.util.RxEventBus
 import com.google.android.material.snackbar.Snackbar
-import com.jakewharton.rxbinding3.view.clicks
+import com.jakewharton.rxbinding2.view.clicks
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
+import dev.arunkumar.android.dagger.viewmodel.UsesViewModel
 import dev.arunkumar.android.dagger.viewmodel.ViewModelKey
+import dev.arunkumar.android.dagger.viewmodel.viewModel
+import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @SuppressLint("CheckResult")
-class HomeActivity : BaseActivity(), Snackable {
-  private lateinit var binding: ActivityMainBinding
+class HomeActivity : BaseActivity(), Snackable, UsesViewModel {
   @Inject
   lateinit var tabsManager: TabsManager
 
@@ -70,11 +73,8 @@ class HomeActivity : BaseActivity(), Snackable {
   lateinit var tabsManger: TabsManager
 
   @Inject
-  lateinit var viewModelFactory: ViewModelProvider.Factory
-
-  private val homeActivityViewModel: HomeActivityViewModel by lazy {
-    ViewModelProvider(this, viewModelFactory)[HomeActivityViewModel::class.java]
-  }
+  override lateinit var viewModelFactory: ViewModelProvider.Factory
+  private val homeActivityViewModel by viewModel<HomeActivityViewModel>()
 
   override fun inject(activityComponent: ActivityComponent) = activityComponent.inject(this)
 
@@ -90,8 +90,7 @@ class HomeActivity : BaseActivity(), Snackable {
   override fun onCreate(savedInstanceState: Bundle?) {
     setTheme(R.style.AppTheme_NoActionBar)
     super.onCreate(savedInstanceState)
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    setContentView(binding.root)
+
     applyWindowInsets()
 
     if (Preferences.get(this).isFirstRun) {
@@ -104,29 +103,54 @@ class HomeActivity : BaseActivity(), Snackable {
     setupSearchBar()
     setupFeed()
     setupEventListeners()
+
+    requestPostNotificationsIfNeeded()
   }
 
   /**
-   * Apply system-bar insets as padding so the header (with the settings/tips icons) and the bottom
-   * search bar are not drawn under the status/navigation bars. Under targetSdk 35 the system forces
-   * edge-to-edge on Android 15+ (API 35+); without this the header overlaps the status bar and the
-   * top-right settings gear becomes untappable. On older versions the dispatched insets are 0, so
-   * this is a no-op there. Logic lives in [EdgeToEdge] so it is unit-testable.
+   * Ported from master 5e2d41f9: apply system-bar + display-cutout insets as padding so the header
+   * (settings/tips icons) and the bottom search bar are not drawn under the status/navigation bars.
+   * Under targetSdk 35 the system forces edge-to-edge on Android 15+ (API 35+); without this the
+   * header overlaps the status bar and the top-right settings gear becomes untappable. On older
+   * versions the dispatched insets are 0, so this is a no-op there.
    */
   private fun applyWindowInsets() {
-    EdgeToEdge.applyContentInsets(binding.coordinatorLayout)
+    ViewCompat.setOnApplyWindowInsetsListener(coordinatorLayout) { view, insets ->
+      val bars = insets.getInsets(
+        WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+      )
+      view.updatePadding(top = bars.top, bottom = bars.bottom, left = bars.left, right = bars.right)
+      insets
+    }
+  }
+
+  /**
+   * Spike RAS-38: on Android 13+ (targetSdk 33+) notifications — and therefore bubbles —
+   * are blocked until the user grants POST_NOTIFICATIONS at runtime. We request it once on
+   * first launch of the home screen. The permission string is used as a literal because the
+   * Manifest.permission.POST_NOTIFICATIONS constant only exists from compileSdk 33 and we
+   * compile against 31 (see Constants.ANDROID_TARGET_SDK note).
+   */
+  private fun requestPostNotificationsIfNeeded() {
+    if (android.os.Build.VERSION.SDK_INT < 33) return
+    val permission = "android.permission.POST_NOTIFICATIONS"
+    val granted = androidx.core.content.ContextCompat.checkSelfPermission(this, permission) ==
+      android.content.pm.PackageManager.PERMISSION_GRANTED
+    if (!granted) {
+      androidx.core.app.ActivityCompat.requestPermissions(this, arrayOf(permission), 42)
+    }
   }
 
   override fun snack(textToSnack: String) {
-    Snackbar.make(binding.coordinatorLayout, textToSnack, Snackbar.LENGTH_SHORT).show()
+    Snackbar.make(coordinatorLayout, textToSnack, Snackbar.LENGTH_SHORT).show()
   }
 
   override fun snackLong(textToSnack: String) {
-    Snackbar.make(binding.coordinatorLayout, textToSnack, Snackbar.LENGTH_LONG).show()
+    Snackbar.make(coordinatorLayout, textToSnack, Snackbar.LENGTH_LONG).show()
   }
 
   private fun setupToolbar() {
-    binding.tipsIcon.setImageDrawable(
+    tipsIcon.setImageDrawable(
       IconicsDrawable(this)
         .icon(CommunityMaterial.Icon.cmd_lightbulb_on)
         .colorRes(R.color.md_yellow_700)
@@ -136,10 +160,10 @@ class HomeActivity : BaseActivity(), Snackable {
 
   private fun setupEventListeners() {
     subs.add(rxEventBus.filteredEvents<TabsManager.FinishRoot>().subscribe { finish() })
-    binding.settingsIcon.setOnClickListener {
+    settingsIcon.setOnClickListener {
       startActivity(Intent(this, SettingsGroupActivity::class.java))
     }
-    binding.tipsIcon.setOnClickListener {
+    tipsIcon.setOnClickListener {
       startActivity(Intent(this, TipsActivity::class.java))
     }
   }
@@ -152,7 +176,7 @@ class HomeActivity : BaseActivity(), Snackable {
   }
 
   private fun setupFeed() {
-    binding.homeFeedRecyclerView.apply {
+    homeFeedRecyclerView.apply {
       setController(homeFeedController)
       (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
     }
@@ -168,7 +192,7 @@ class HomeActivity : BaseActivity(), Snackable {
   }
 
   private fun setupSearchBar() {
-    binding.materialSearchView.apply {
+    materialSearchView.apply {
       // Handle voice item failed
       voiceSearchFailed()
         .takeUntil(lifecycleEvents.destroys)
@@ -193,13 +217,13 @@ class HomeActivity : BaseActivity(), Snackable {
         .takeUntil(lifecycleEvents.destroys)
         .subscribe { hasFocus ->
           if (hasFocus) {
-            binding.shadowView.show()
+            shadowView.show()
           } else {
-            binding.shadowView.gone()
+            shadowView.gone()
           }
         }
 
-      binding.shadowView.clicks()
+      shadowView.clicks()
         .debounce(100, TimeUnit.MILLISECONDS, schedulerProvider.ui)
         .takeUntil(lifecycleEvents.destroys)
         .subscribe { clearFocus() }
@@ -214,8 +238,8 @@ class HomeActivity : BaseActivity(), Snackable {
   }
 
   override fun onBackPressed() {
-    if (binding.materialSearchView.hasFocus()) {
-      binding.materialSearchView.clearFocus()
+    if (materialSearchView.hasFocus()) {
+      materialSearchView.clearFocus()
       return
     }
     super.onBackPressed()
@@ -223,7 +247,7 @@ class HomeActivity : BaseActivity(), Snackable {
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
-    binding.materialSearchView.onActivityResult(requestCode, resultCode, data)
+    materialSearchView.onActivityResult(requestCode, resultCode, data)
   }
 
   @Module
@@ -231,6 +255,6 @@ class HomeActivity : BaseActivity(), Snackable {
     @Binds
     @IntoMap
     @ViewModelKey(HomeActivityViewModel::class)
-    abstract fun bindHomeViewModel(viewModel: HomeActivityViewModel): ViewModel
+    abstract fun HomeActivityViewModel.bindHomeViewModel(): ViewModel
   }
 }
