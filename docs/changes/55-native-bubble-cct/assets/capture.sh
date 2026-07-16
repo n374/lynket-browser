@@ -43,6 +43,21 @@ adb get-state >/dev/null 2>&1 || { echo "🔴 adb 无设备连接"; exit 1; }
   echo "probeUrl=$PROBE_URL"
 } | tee "$OUT/env.txt"
 
+# ── 真机执行学到的关键前置（2026-07-16 实测沉淀，缺一不可）────────────────────────
+# 1) 原生气泡必须显式放行，否则通知只会降级成普通通知（dumpsys 里 isBubble=false）：
+adb shell settings put secure notification_bubbles 1
+adb shell cmd notification set_bubbles "$LYNKET_PKG" 1
+# 注意：channel 在首次 showBubbles 时才创建。若 set_bubbles_channel 报 "null object"，
+# 说明 channel 还没建——先触发一次气泡（下方 [3]）再执行本行，然后重触发一次即变气泡：
+adb shell cmd notification set_bubbles_channel "$LYNKET_PKG" BUBBLE_NOTIFICATION_CHANNEL_ID_v2 true 2>/dev/null || true
+# 2) 令牌取证走 http.server 的 access log beacon，而非 logcat：
+#    稳定版 Chrome 不把页面 console.log 转发到 logcat，故 logcat 抓不到 [BUBBLE_PROBE]；
+#    探针页已改为额外发 GET /beacon?src=..&ck=..&ls=..&wv=..，令牌落在托管服务器 access log。
+#    → 独立浏览器直开用 ?src=baseline，气泡打开用 ?src=bubble，从 server log 读并比对两者令牌。
+# 3) 气泡默认不自动展开（setAutoExpandBubble(false)），必须点开：脚本 adb input tap 命中气泡圆标
+#    （静止在屏幕左/右边缘）；首次点击可能只是关掉 "Chat using bubbles" 教学气泡，需再点一次。
+# ─────────────────────────────────────────────────────────────────────────────
+
 echo "-- [1/6] 清被测浏览器站点数据（从基线起测；勿清错包）--"
 adb shell pm clear "$BROWSER_PKG" >/dev/null
 adb logcat -c

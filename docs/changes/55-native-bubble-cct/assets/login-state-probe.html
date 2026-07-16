@@ -111,7 +111,22 @@
   };
   var dump=JSON.stringify(record,null,2);
   document.getElementById('dump').textContent=dump;
-  console.log('[BUBBLE_PROBE] '+JSON.stringify(record));   // 便于 adb logcat 抓取
+  console.log('[BUBBLE_PROBE] '+JSON.stringify(record));   // 便于 adb logcat 抓取（仅 WebView / 调试版浏览器有效）
+
+  // 独立取证信道：把令牌回传给托管服务器的 access log。
+  // 稳定版 Chrome 不会把页面 console.log 转发到 logcat，故 logcat 抓不到 [BUBBLE_PROBE]；
+  // 用一个 GET beacon 让 `python3 -m http.server` 的 access log 记录令牌，取证脚本从 http.log 读取即可。
+  // `src` 仅用于区分「独立浏览器直开 / 气泡打开」两次，属 query 参数，不改变 origin，
+  // 故 cookie(path=/) 与 localStorage(按 origin) 仍共享，符合 spec「同源」要求。
+  try {
+    var src=(location.search.match(/[?&]src=([^&]*)/)||[])[1]||'na';
+    new Image().src='/beacon?src='+encodeURIComponent(src)
+      +'&ck='+encodeURIComponent(ck||'')
+      +'&ckvalid='+(ckValid?1:0)
+      +'&ls='+encodeURIComponent(ls||'')
+      +'&wv='+(isWebView?1:0)
+      +'&t='+Date.now();
+  } catch(e){ /* beacon 失败不影响页面判读 */ }
   document.getElementById('copy').addEventListener('click',function(){
     try{navigator.clipboard.writeText(dump);this.textContent='已复制';}catch(e){this.textContent='复制失败，请手动截图';}
   });
