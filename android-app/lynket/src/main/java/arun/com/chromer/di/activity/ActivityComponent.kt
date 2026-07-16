@@ -27,7 +27,6 @@ import arun.com.chromer.browsing.browserintercept.BrowserInterceptActivity
 import arun.com.chromer.browsing.customtabs.BubbleCctShellActivity
 import arun.com.chromer.browsing.customtabs.CustomTabActivity
 import arun.com.chromer.browsing.customtabs.CustomTabs
-import arun.com.chromer.bubbles.system.BubbleSpikeTriggerActivity
 import arun.com.chromer.browsing.newtab.NewTabDialogActivity
 import arun.com.chromer.browsing.optionspopup.ChromerOptionsActivity
 import arun.com.chromer.browsing.providerselection.ProviderSelectionActivity
@@ -66,10 +65,8 @@ interface ActivityComponent {
 
   fun inject(customTabActivity: CustomTabActivity)
 
-  // RAS-55 spike-only（design §5.5）：新增 Activity 必须显式声明 inject，否则 DI 缺失、编译/运行崩。
+  // RAS-55：气泡外部浏览器薄壳需显式声明 inject（DI 逐 Activity 声明），否则 DI 缺失、编译/运行崩。
   fun inject(bubbleCctShellActivity: BubbleCctShellActivity)
-
-  fun inject(bubbleSpikeTriggerActivity: BubbleSpikeTriggerActivity)
 
   fun inject(activityComponent: ActivityComponent)
 

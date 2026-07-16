@@ -173,9 +173,10 @@
       android:name=".browsing.customtabs.CustomTabActivity"
       android:label="@string/app_name"
       android:theme="@style/Theme.AppCompat.Translucent" />
-    <!-- RAS-55 SPIKE-ONLY (design §4.2): bubble-embeddable shell that launches the selected
-         external browser's Custom Tab. Mirrors EmbeddableWebViewActivity's embedding declarations
-         (allowEmbedded/resizeable/documentLaunchMode) so the system bubble can host it; not exported. -->
+    <!-- RAS-55: bubble-embeddable shell that launches the selected external browser's Custom Tab
+         (reusing its logins) when the "open bubbles in external browser" preference is on. Mirrors
+         EmbeddableWebViewActivity's embedding declarations (allowEmbedded/resizeable/documentLaunchMode)
+         so the system bubble can host it; not exported. -->
     <activity
       android:name=".browsing.customtabs.BubbleCctShellActivity"
       android:allowEmbedded="true"
@@ -183,16 +184,6 @@
       android:exported="false"
       android:label="@string/app_name"
       android:resizeableActivity="true"
-      android:theme="@style/Theme.AppCompat.Translucent"
-      tools:targetApi="Q" />
-    <!-- RAS-55 SPIKE-ONLY (design §5.4): scriptable trigger that posts a native bubble via
-         showBubbles() directly, bypassing openWebHeads' aggressive-loading side effect. Exported so
-         `adb am start` can drive capture; gated to DEBUG builds at runtime. -->
-    <activity
-      android:name=".bubbles.system.BubbleSpikeTriggerActivity"
-      android:excludeFromRecents="true"
-      android:exported="true"
-      android:noHistory="true"
       android:theme="@style/Theme.AppCompat.Translucent"
       tools:targetApi="Q" />
     <activity
