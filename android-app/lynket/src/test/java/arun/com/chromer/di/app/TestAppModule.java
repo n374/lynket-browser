@@ -19,15 +19,17 @@
 
 package arun.com.chromer.di.app;
 
-import android.app.Application;
-
 import arun.com.chromer.di.viewmodel.ViewModelModule;
 import dagger.Module;
 
+/**
+ * Test variant of {@link AppModule}. Application is bound into the graph via
+ * {@link TestAppComponent.Factory}'s {@code @BindsInstance} (mirroring prod {@code AppComponent}),
+ * so this module no longer takes an Application in its constructor. The old
+ * {@code TestAppModule(Application)} called a {@code super(application)} constructor that ceased to
+ * exist when prod migrated {@code AppModule} to the {@code @Component.Factory} + {@code @BindsInstance}
+ * pattern — that drift had left the whole unit-test source set uncompilable (RAS-55 fix).
+ */
 @Module(includes = ViewModelModule.class)
 public class TestAppModule extends AppModule {
-
-  public TestAppModule(Application application) {
-    super(application);
-  }
 }
