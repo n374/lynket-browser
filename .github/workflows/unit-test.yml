@@ -8,6 +8,10 @@ name: Unit Test
 # private deps via publishToMavenLocal first, then run testDebugUnitTest.
 
 on:
+  # push 触发不要求工作流存在于默认分支（workflow_dispatch 则要求），故加 push 以便在特性分支直接跑。
+  push:
+    branches:
+      - feature/55-native-bubble-cct
   workflow_dispatch:
 
 jobs:
