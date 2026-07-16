@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Lynket
+
+  Copyright (C) 2026 Arunkumar
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+-->
+<resources>
+  <!--
+    FOREGROUND_SERVICE_TYPE_SPECIAL_USE (= 1 << 30 = 0x40000000), added in API 34.
+
+    Referenced from AndroidManifest as android:foregroundServiceType="@integer/...". We cannot write
+    the literal "specialUse" (or 0x40000000) directly on the attribute: compileSdk=31's attrs.xml
+    only knows the API-31 foregroundServiceType flag values, so AAPT2 rejects both the name and a raw
+    numeric literal. A resource reference sidesteps AAPT2's flag-enum validation while resolving to
+    the correct bits at install time; on <34 devices the unknown bit is simply masked off (no-op).
+    See docs/changes/54-mode-crash-fix/design.md §12.4 (res/values fallback).
+  -->
+  <integer name="foreground_service_type_special_use">1073741824</integer>
+</resources>

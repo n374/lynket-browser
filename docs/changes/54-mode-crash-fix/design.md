@@ -268,7 +268,7 @@ android.app.MissingForegroundServiceTypeException: Starting FGS without a type  
 ### 12.7 spec / 验收增量
 本节新增一条 capability 需求（供归档时并入 living spec）：
 - **Requirement（ADDED）**：WHEN 在 `targetSdk ≥ 34`（Android 14+）模拟器/设备上启动 Web Heads 或 App-Detection 前台服务，THE SYSTEM SHALL 正常进入前台（气泡/检测生效），而不因缺 `foregroundServiceType` 抛 `MissingForegroundServiceTypeException`。
-- **覆盖测试**: TBD（模拟器 E2E：API 34 触发两前台服务不崩 + logcat 对照；纯 UT 无法复现 FGS 类型校验，属平台运行时行为，与 §6 同理靠模拟器闭环）。
+- **覆盖测试**（开发阶段已落地）：模拟器 E2E（API 34 AVD `LyknetTest` 实测）——`WebHeadService`、`AppDetectService` 均 `dumpsys` 佐证 `isForeground=true types=40000000`、`startForegroundCount≥1`，logcat 无 `MissingForegroundServiceTypeException`；纯 UT 无法复现 FGS 类型校验（平台运行时行为，与 §6 同理靠模拟器闭环）。已同步 `specs/link-open-modes/spec.md`。
 
 ### 12.7b 验收补充（把 12.5b 纳入门槛）
 在 §12.5 的三项验收基础上追加：**（4）** 开启 app-based toolbar / per-app settings 偏好后**冷启动 App**，确认 `AppDetectService` 在 API 34 既不抛 `MissingForegroundServiceTypeException`（本次修复目标），也观察是否抛 `ForegroundServiceStartNotAllowedException`（12.5b 的相邻风险，若抛则另开 issue）。
