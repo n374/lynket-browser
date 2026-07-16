@@ -37,6 +37,7 @@ import java.util.Random;
 import arun.com.chromer.R;
 import arun.com.chromer.shared.Constants;
 import arun.com.chromer.util.ColorUtil;
+import arun.com.chromer.util.PendingIntents;
 import arun.com.chromer.util.Utils;
 
 /**
@@ -127,6 +128,9 @@ public class BottomBarManager {
   public static PendingIntent getOnClickPendingIntent(Context context, String url) {
     final Intent broadcastIntent = new Intent(context, BottomBarReceiver.class);
     broadcastIntent.putExtra(Constants.EXTRA_KEY_ORIGINAL_URL, url);
-    return PendingIntent.getBroadcast(context, new Random().nextInt(), broadcastIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    // MUTABLE: secondary-toolbar intent. The browser fills the clicked view id (EXTRA_REMOTEVIEWS_CLICKED_ID)
+    // and current URL into the intent at click time; an immutable PendingIntent would drop them, leaving
+    // clickedId == -1 so BottomBarReceiver returns early and the whole bottom bar silently stops working.
+    return PendingIntent.getBroadcast(context, new Random().nextInt(), broadcastIntent, PendingIntents.mutable(PendingIntent.FLAG_UPDATE_CURRENT));
   }
 }

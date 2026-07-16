@@ -96,6 +96,7 @@ import arun.com.chromer.di.service.ServiceComponent;
 import arun.com.chromer.settings.Preferences;
 import arun.com.chromer.shared.Constants;
 import arun.com.chromer.tabs.TabsManager;
+import arun.com.chromer.util.PendingIntents;
 import arun.com.chromer.util.SchedulerProvider;
 import arun.com.chromer.util.Utils;
 import rx.Observable;
@@ -203,9 +204,15 @@ public class WebHeadService extends OverlayService implements WebHeadContract,
         notificationManager.createNotificationChannel(channel);
       }
     }
-    final PendingIntent contentIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_STOP_WEBHEAD_SERVICE), FLAG_UPDATE_CURRENT);
-    final PendingIntent contextActivity = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_OPEN_CONTEXT_ACTIVITY), FLAG_UPDATE_CURRENT);
-    final PendingIntent newTab = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_OPEN_NEW_TAB), FLAG_UPDATE_CURRENT);
+    // These three are self-contained notification-action broadcasts, so they use IMMUTABLE (no browser
+    // fill-in needed). Their base intents carry only a generic action, so scope each to this package
+    // before making it immutable: FLAG_IMMUTABLE does not constrain broadcast resolution, and an
+    // unscoped implicit intent trips the Android 14+ implicit-intent lint. Note these MUST stay
+    // implicit (no explicit component) and therefore MUST be IMMUTABLE — FLAG_MUTABLE on an implicit
+    // intent throws on targetSdk >= 34 (this project is 35).
+    final PendingIntent contentIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_STOP_WEBHEAD_SERVICE).setPackage(getPackageName()), PendingIntents.immutable(FLAG_UPDATE_CURRENT));
+    final PendingIntent contextActivity = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_OPEN_CONTEXT_ACTIVITY).setPackage(getPackageName()), PendingIntents.immutable(FLAG_UPDATE_CURRENT));
+    final PendingIntent newTab = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_OPEN_NEW_TAB).setPackage(getPackageName()), PendingIntents.immutable(FLAG_UPDATE_CURRENT));
     Notification notification = new NotificationCompat.Builder(this, WebHeadService.class.getName())
       .setSmallIcon(R.drawable.ic_chromer_notification)
       .setPriority(PRIORITY_MIN)
