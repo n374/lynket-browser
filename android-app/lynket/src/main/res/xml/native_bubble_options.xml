@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~
+  ~  Lynket
+  ~
+  ~  Copyright (C) 2022 Arunkumar
+  ~
+  ~  This program is free software: you can redistribute it and/or modify
+  ~  it under the terms of the GNU General Public License as published by
+  ~  the Free Software Foundation, either version 3 of the License, or
+  ~  (at your option) any later version.
+  ~
+  ~  This program is distributed in the hope that it will be useful,
+  ~  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~  GNU General Public License for more details.
+  ~
+  ~  You should have received a copy of the GNU General Public License
+  ~  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!--suppress AndroidElementNotAllowed -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+  android:key="settings"
+  android:title="@string/settings">
+
+  <PreferenceCategory android:title="@string/browsing_mode_native_bubbles">
+    <!-- RAS-55: key 必须与 RxPreferences.BUBBLE_EXTERNAL_BROWSER_PREFERENCE 一致；
+         默认 false = 气泡维持内置 WebView（零回归）。 -->
+    <arun.com.chromer.settings.widgets.IconSwitchPreference
+      android:defaultValue="false"
+      android:key="bubble_external_browser_preference"
+      android:summary="@string/bubble_external_browser_summary"
+      android:title="@string/bubble_external_browser_title" />
+  </PreferenceCategory>
+</PreferenceScreen>

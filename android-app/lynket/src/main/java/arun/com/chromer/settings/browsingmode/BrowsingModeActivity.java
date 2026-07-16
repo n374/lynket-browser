@@ -20,6 +20,7 @@
 
 package arun.com.chromer.settings.browsingmode;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 
@@ -87,6 +88,24 @@ public class BrowsingModeActivity extends BaseActivity implements BrowsingModeAd
       .beginTransaction()
       .replace(R.id.browse_faster_preferences_container, BrowseFasterPreferenceFragment.newInstance())
       .commit();
+    setupNativeBubblePreferences();
+  }
+
+  /**
+   * RAS-55：原生气泡专属选项（用外部浏览器打开气泡）。原生气泡本身要求 Android Q+，
+   * 低版本上连浏览模式列表都不出现该模式，故整卡隐藏。
+   */
+  private void setupNativeBubblePreferences() {
+    final View nativeBubbleCard = findViewById(R.id.native_bubble_preferences_card);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      nativeBubbleCard.setVisibility(View.VISIBLE);
+      getSupportFragmentManager()
+        .beginTransaction()
+        .replace(R.id.native_bubble_preferences_container, NativeBubblePreferenceFragment.Companion.newInstance())
+        .commit();
+    } else {
+      nativeBubbleCard.setVisibility(View.GONE);
+    }
   }
 
   @Override

@@ -27,6 +27,7 @@ import javax.inject.Inject
 
 const val SEARCH_ENGINE_PREFERENCE = "search_engine_preference"
 const val NATIVE_BUBBLES_PREFERENCE = "native_bubbles_preference"
+const val BUBBLE_EXTERNAL_BROWSER_PREFERENCE = "bubble_external_browser_preference"
 
 class RxPreferences
 @Inject
@@ -41,4 +42,11 @@ constructor(rxPrefs: RxkPrefs) {
   val searchEngine by lazy { rxPrefs.string(SEARCH_ENGINE_PREFERENCE, SearchProviders.GOOGLE) }
 
   val nativeBubbles by lazy { rxPrefs.boolean(NATIVE_BUBBLES_PREFERENCE, false) }
+
+  /**
+   * RAS-55：原生气泡展开时是否改用「所选外部浏览器的 Custom Tab」承载页面（复用该浏览器的
+   * 登录态）。默认 false = 维持内置 WebView 行为（零回归）。仅在原生气泡模式
+   * （[nativeBubbles]）下有意义，由 `BubbleNotificationManager.showBubbles` 读取。
+   */
+  val bubbleExternalBrowser by lazy { rxPrefs.boolean(BUBBLE_EXTERNAL_BROWSER_PREFERENCE, false) }
 }

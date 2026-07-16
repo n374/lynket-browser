@@ -24,6 +24,7 @@ import android.app.Activity
 import arun.com.chromer.browsing.amp.AmpResolverActivity
 import arun.com.chromer.browsing.article.ArticleActivity
 import arun.com.chromer.browsing.browserintercept.BrowserInterceptActivity
+import arun.com.chromer.browsing.customtabs.BubbleCctShellActivity
 import arun.com.chromer.browsing.customtabs.CustomTabActivity
 import arun.com.chromer.browsing.customtabs.CustomTabs
 import arun.com.chromer.browsing.newtab.NewTabDialogActivity
@@ -63,6 +64,9 @@ interface ActivityComponent {
   fun inject(browserInterceptActivity: BrowserInterceptActivity)
 
   fun inject(customTabActivity: CustomTabActivity)
+
+  // RAS-55：气泡外部浏览器薄壳需显式声明 inject（DI 逐 Activity 声明），否则 DI 缺失、编译/运行崩。
+  fun inject(bubbleCctShellActivity: BubbleCctShellActivity)
 
   fun inject(activityComponent: ActivityComponent)
 

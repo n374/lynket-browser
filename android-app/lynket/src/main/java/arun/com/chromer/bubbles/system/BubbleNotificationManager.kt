@@ -38,7 +38,9 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import arun.com.chromer.R
+import arun.com.chromer.browsing.customtabs.BubbleCctShellActivity
 import arun.com.chromer.browsing.webview.EmbeddableWebViewActivity
+import arun.com.chromer.settings.RxPreferences
 import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.Utils
 import dev.arunkumar.common.context.dpToPx
@@ -59,7 +61,8 @@ private const val BUBBLE_NOTIFICATION_GROUP = "bubbles"
 class BubbleNotificationManager
 @Inject
 constructor(
-  private val application: Application
+  private val application: Application,
+  private val rxPreferences: RxPreferences
 ) {
 
   private val notificationManager by lazy {
@@ -112,7 +115,17 @@ constructor(
     val context = bubbleData.contextRef.get() ?: application
     val website = bubbleData.website
 
-    val viewIntent = Intent(context, EmbeddableWebViewActivity::class.java).apply {
+    // RAS-55：气泡展开目标在「外部浏览器 CCT 薄壳」↔「内置 WebView」间切换，默认跟随用户偏好
+    // bubbleExternalBrowser（默认 false = 维持内置 WebView 现状，零回归）；BubbleLoadData 显式传值
+    // 时以显式值为准。决策逻辑抽到 resolveBubbleTarget（纯函数，单测覆盖）。此处是唯一 viewIntent
+    // 构造点，下方 shortcut `.setIntent(viewIntent)` 与 bubbleIntent 复用同一对象，两个目标天然同步。
+    val bubbleTarget: Class<*> = when (
+      resolveBubbleTarget(bubbleData.useCctShell, rxPreferences.bubbleExternalBrowser.get())
+    ) {
+      BubbleTarget.EXTERNAL_BROWSER_CCT -> BubbleCctShellActivity::class.java
+      BubbleTarget.INTERNAL_WEBVIEW -> EmbeddableWebViewActivity::class.java
+    }
+    val viewIntent = Intent(context, bubbleTarget).apply {
       // A non-null action is required so the same Intent can back a sharing shortcut.
       action = Intent.ACTION_VIEW
       data = Uri.parse(website.url)

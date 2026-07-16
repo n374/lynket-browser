@@ -58,6 +58,7 @@
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
+      android:id="@+id/browse_faster_preferences_card"
       style="@style/FullWidthCard"
       android:layout_below="@+id/browsing_mode_card"
       app:cardElevation="4dp"
@@ -66,6 +67,21 @@
 
       <FrameLayout
         android:id="@+id/browse_faster_preferences_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- RAS-55: native bubble specific options; BrowsingModeActivity hides this card below Android Q. -->
+    <androidx.cardview.widget.CardView
+      android:id="@+id/native_bubble_preferences_card"
+      style="@style/FullWidthCard"
+      android:layout_below="@+id/browse_faster_preferences_card"
+      app:cardElevation="4dp"
+      app:cardPreventCornerOverlap="true"
+      app:cardUseCompatPadding="true">
+
+      <FrameLayout
+        android:id="@+id/native_bubble_preferences_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     </androidx.cardview.widget.CardView>

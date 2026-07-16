@@ -338,6 +338,8 @@
   <string name="browsing_mode_native_bubbles">Native Bubbles (Beta)</string>
   <string name="browsing_mode_native_bubbles_warning">Native bubbles integration is in beta and requires extra steps to be enabled. Please note that current implementation is not final and may change in the future. \n\nKnown issues:\nOnly WebView provider works with floating window.</string>
   <string name="browsing_mode_native_bubbles_guide">Guide</string>
+  <string name="bubble_external_browser_title">Open bubbles in external browser</string>
+  <string name="bubble_external_browser_summary">Load bubble contents with your selected browser\'s Custom Tab, reusing its logins. May fall back to full screen on some devices.</string>
   <string name="bubble_notification_group_title">Active bubbles</string>
   <string name="bubble_notification_group_description">Showing bubble notifications, swipe to expand</string>
   <string name="discuss_on_reddit">Discuss on Reddit</string>

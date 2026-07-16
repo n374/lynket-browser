@@ -251,4 +251,6 @@
   <string name="enable_history">瀏覽記錄已開啟</string>
   <string name="enable_history_subtitle">關閉「記錄」將停止保存瀏覽記錄。</string>
   <string name="enable_history_subtitle_custom_tab"><![CDATA[關閉關閉「記錄」將會停止保存瀏覽記錄。但自定標籤頁的瀏覽器，<b>%1$s</b> 仍可能保存瀏覽記錄。]]></string>
+  <string name="bubble_external_browser_title">用外部瀏覽器開啟氣泡</string>
+  <string name="bubble_external_browser_summary">氣泡內容改用所選瀏覽器的自訂分頁（Custom Tab）載入，重複使用其登入狀態。部分裝置上可能退化為全螢幕開啟。</string>
 </resources>

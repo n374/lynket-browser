@@ -243,4 +243,6 @@
   <string name="slide_over_fragment_close_prompt">点击 X 来快速关闭标签页</string>
   <string name="see_demo">查看样例</string>
   <string name="provider_intro_explanation">Lynket可以与您最喜爱的浏览器搭配使用。\n\n例如，把Google Chrome作为标签页提供程序将会允许你同步浏览历史，使用数据存储库和在您的Google账户上储存的密码。</string>
+  <string name="bubble_external_browser_title">用外部浏览器打开气泡</string>
+  <string name="bubble_external_browser_summary">气泡内容改用所选浏览器的自定义标签页（Custom Tab）加载，复用其登录态。部分设备上可能退化为全屏打开。</string>
 </resources>

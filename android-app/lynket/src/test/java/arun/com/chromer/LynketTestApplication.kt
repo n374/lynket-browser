@@ -21,13 +21,12 @@ package arun.com.chromer
 
 import arun.com.chromer.di.app.AppComponent
 import arun.com.chromer.di.app.DaggerTestAppComponent
-import arun.com.chromer.di.app.TestAppModule
 
 class LynketTestApplication : Lynket() {
 
+  // Mirrors prod Lynket.appComponent (DaggerAppComponent.factory().create(this)): Application is
+  // bound via TestAppComponent.Factory's @BindsInstance (RAS-55 test-harness repair).
   override val appComponent: AppComponent by lazy {
-    DaggerTestAppComponent.builder()
-      .testAppModule(TestAppModule(this))
-      .build()
+    DaggerTestAppComponent.factory().create(this)
   }
 }
