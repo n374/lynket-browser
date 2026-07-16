@@ -1,0 +1,71 @@
+name: Unit Test
+
+# 跑 lynket 的 JVM 单元测试。与 build-apk.yml 一样，先把上游 base-android 的私有依赖
+# (dev.arunkumar.android:*) 从源码 publishToMavenLocal 复活，再执行 testDebugUnitTest。
+# 手动触发（workflow_dispatch）即可；用于验证 RAS-55 等新增单测在干净环境下确实通过。
+#
+# Run lynket JVM unit tests. Like build-apk.yml, resurrect the upstream base-android
+# private deps via publishToMavenLocal first, then run testDebugUnitTest.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  unit-test:
+    name: Run JVM unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (fork)
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Cache Gradle & Maven Local
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.m2/repository
+          key: ${{ runner.os }}-gradle-${{ hashFiles('android-app/**/*.gradle*', 'android-app/**/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Resurrect base-android deps (publishToMavenLocal)
+        run: |
+          set -euxo pipefail
+          # 见 build-apk.yml 的同名步骤：base-android 私有快照仓已清空，只能从源码本地发布，
+          # 且必须带 -Psnapshot 才会发布成 master-SNAPSHOT 版本以匹配 lynket 的依赖坐标。
+          BASE_ANDROID_REF=9380452
+          git clone https://github.com/arunkumar9t2/base-android.git "$RUNNER_TEMP/base-android"
+          cd "$RUNNER_TEMP/base-android"
+          git checkout "$BASE_ANDROID_REF"
+          sed -i 's|^  configureSigning()|  // configureSigning() disabled in CI (no signing keys for local publish)|' \
+            build-logic/src/main/kotlin/publish/PublishingLibrary.kt
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace -Psnapshot \
+            :common:publishToMavenLocal \
+            :dagger-base:publishToMavenLocal \
+            :logging:publishToMavenLocal \
+            :dagger-viewmodel:publishToMavenLocal \
+            :epoxy-utils:publishToMavenLocal \
+            :rx-utils:publishToMavenLocal
+
+      - name: Run unit tests
+        working-directory: android-app
+        run: |
+          set -euxo pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace :lynket:testDebugUnitTest
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lynket-unit-test-report
+          path: android-app/lynket/build/reports/tests/testDebugUnitTest
+          if-no-files-found: warn
