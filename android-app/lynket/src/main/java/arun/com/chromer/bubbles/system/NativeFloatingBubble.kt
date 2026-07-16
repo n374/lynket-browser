@@ -49,7 +49,13 @@ data class BubbleLoadData(
   val incognito: Boolean,
   val contextRef: WeakReference<Context?> = WeakReference(null),
   val icon: Bitmap? = null,
-  val color: Int = Constants.NO_COLOR
+  val color: Int = Constants.NO_COLOR,
+  /**
+   * RAS-55 spike (design §5.3)：气泡展开目标是「外部浏览器 CCT 薄壳」(true, 实验组) 还是
+   * 「内置 WebView」(false, 对照组)。默认取 [BubbleSpikeConfig.DEFAULT_USE_CCT_SHELL]；
+   * `BubbleSpikeTriggerActivity` 会按 intent extra 显式传值以在同一 APK 做 A/B。
+   */
+  val useCctShell: Boolean = BubbleSpikeConfig.DEFAULT_USE_CCT_SHELL
 )
 
 @RequiresApi(Build.VERSION_CODES.Q)

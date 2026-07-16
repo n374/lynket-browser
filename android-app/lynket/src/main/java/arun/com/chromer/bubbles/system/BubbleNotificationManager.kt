@@ -38,6 +38,7 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import arun.com.chromer.R
+import arun.com.chromer.browsing.customtabs.BubbleCctShellActivity
 import arun.com.chromer.browsing.webview.EmbeddableWebViewActivity
 import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.Utils
@@ -112,7 +113,15 @@ constructor(
     val context = bubbleData.contextRef.get() ?: application
     val website = bubbleData.website
 
-    val viewIntent = Intent(context, EmbeddableWebViewActivity::class.java).apply {
+    // RAS-55 spike (design §5.3)：气泡展开目标在「外部浏览器 CCT 薄壳」(实验组) ↔ 「内置 WebView」(对照组)
+    // 间切换。此处是唯一 viewIntent 构造点，下方 shortcut `.setIntent(viewIntent)` 与 bubbleIntent
+    // 复用同一对象，故实验/对照两组天然同步，无「只改一处」错配之虞（design §5.3 易漏点）。
+    val bubbleTarget: Class<*> = if (bubbleData.useCctShell) {
+      BubbleCctShellActivity::class.java
+    } else {
+      EmbeddableWebViewActivity::class.java
+    }
+    val viewIntent = Intent(context, bubbleTarget).apply {
       // A non-null action is required so the same Intent can back a sharing shortcut.
       action = Intent.ACTION_VIEW
       data = Uri.parse(website.url)

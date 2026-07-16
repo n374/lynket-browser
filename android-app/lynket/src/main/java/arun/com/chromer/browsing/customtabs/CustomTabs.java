@@ -146,10 +146,14 @@ public class CustomTabs {
   /**
    * Attempts to find the custom the best custom tab package to use.
    *
+   * <p>RAS-55 spike: widened to {@code public} so {@code BubbleCctShellActivity} can resolve the
+   * user-selected backend browser package without going through the {@link #openCustomTab()} facade
+   * (which hides a WebView fallback + WebHead session reuse that would poison the experiment).
+   *
    * @return A package that supports custom tab, null if not present
    */
   @Nullable
-  private static String getCustomTabPackage(Context context) {
+  public static String getCustomTabPackage(Context context) {
     final String userPackage = Preferences.get(context).customTabPackage();
     if (userPackage != null && userPackage.length() > 0) {
       return userPackage;
