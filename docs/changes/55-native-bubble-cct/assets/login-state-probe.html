@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lynket 气泡渲染探针 / Bubble Render Probe</title>
+<style>
+  body{font-family:-apple-system,Roboto,sans-serif;margin:0;padding:14px;line-height:1.5;font-size:15px;background:#fff;color:#111}
+  h1{font-size:18px;margin:0 0 8px}
+  .row{margin:10px 0;padding:10px;border:1px solid #ddd;border-radius:8px;word-break:break-all}
+  .k{font-weight:700;color:#555;font-size:12px;text-transform:uppercase}
+  .v{font-family:monospace;font-size:14px}
+  .flag{font-weight:700}
+  .bad{color:#b00}
+  .ok{color:#080}
+  .warn{color:#a60}
+  #copy{margin-top:12px;padding:10px 16px;font-size:15px}
+  .note{font-size:13px;color:#666}
+</style>
+</head>
+<body>
+<h1>气泡渲染探针 · Bubble Render Probe</h1>
+<p class="note">本页零登录、纯本地，是<b>辅助/佐证</b>信号，<b>不是</b>可行性的决定性证据。决定性证据是 <code>adb shell dumpsys activity activities</code>：气泡展开后 resumed 的顶层 Activity 必须是<b>目标浏览器包的 Custom Tab Activity</b>、且处在气泡所在 task/window 内（详见 spec）。本页只做两件事：给出引擎的<b>辅助</b>判断，以及测<b>同源一方存储（cookie / localStorage）是否与独立打开的同一浏览器连续</b>。对同一 URL 分别用「独立浏览器直开」「原生气泡」各开一次截图对比。</p>
+
+<div class="row">
+  <div class="k">1) 引擎辅助信号（非决定性）：User-Agent 是否含 <code>wv</code></div>
+  <div id="engine" class="v flag"></div>
+  <div class="k" style="margin-top:6px">完整 UA（以此为准人工判读，UA 可被改写，仅辅助）</div>
+  <div id="ua" class="v"></div>
+</div>
+
+<div class="row">
+  <div class="k">2) 会话/存储共享令牌（cookie 与 localStorage <b>各自独立</b>生成、独立比较）</div>
+  <div class="k" style="margin-top:6px">cookie 令牌（含写入复读校验）</div>
+  <div id="ck" class="v"></div>
+  <div id="ckstatus" class="v"></div>
+  <div class="k" style="margin-top:6px">localStorage 令牌（与 cookie 令牌互不 seed）</div>
+  <div id="ls" class="v"></div>
+  <div class="k" style="margin-top:6px">localStorage 首访时间（独立第三信号）</div>
+  <div id="first" class="v"></div>
+</div>
+
+<div class="row">
+  <div class="k">3) 判读方法</div>
+  <ul>
+    <li><b>引擎（决定性证据在 dumpsys，本页仅辅助）</b>：气泡内 UA 含 <span class="bad">wv</span> ⇒ 强烈提示内置 WebView；不含 wv 只是<b>不排除</b>外部 CCT，不能单独据此判成功——须配合 dumpsys 的包名/栈证据。</li>
+    <li><b>cookie 共享</b>：独立浏览器直开生成 cookie 令牌 X（须显示"写入已复读校验 OK"）。气泡内打开同一 URL：cookie 令牌<b>= X</b> ⇒ 与该浏览器共享 cookie jar；<b>≠ X</b> 或校验失败 ⇒ 未共享 / 无效，本信号作废不参与判定。</li>
+    <li><b>localStorage 共享</b>：独立比较 localStorage 令牌与首访时间是否与独立浏览器一致（<b>不</b>用 cookie 令牌回填，避免假阳）。cookie 共享但 localStorage 不共享是可能的，须分别记录。</li>
+  </ul>
+</div>
+
+<button id="copy">复制全部信息（用于本地记录）</button>
+<pre id="dump" class="v" style="white-space:pre-wrap;margin-top:12px"></pre>
+
+<script>
+(function(){
+  function getCookie(n){
+    var m=document.cookie.match(new RegExp('(?:^|; )'+n+'=([^;]*)'));
+    return m?decodeURIComponent(m[1]):null;
+  }
+  function setCookie(n,v){
+    document.cookie=n+'='+encodeURIComponent(v)+';path=/;max-age=31536000;SameSite=Lax';
+  }
+  function rnd(prefix){
+    return prefix+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
+  }
+
+  // ---- 引擎辅助信号（UA）----
+  var ua=navigator.userAgent;
+  var isWebView=/;\s*wv\b/.test(ua)||/\bwv\)/.test(ua);
+  var engineEl=document.getElementById('engine');
+  engineEl.textContent=isWebView
+    ?'UA 含 wv ⇒ 强烈提示 App 内置 WebView（辅助信号）'
+    :'UA 不含 wv ⇒ 不排除外部浏览器 CCT，但需 dumpsys 包名/栈证据坐实（非决定性）';
+  engineEl.className='v flag '+(isWebView?'bad':'warn');
+  document.getElementById('ua').textContent=ua;
+
+  // ---- cookie 令牌：独立生成 + 写入后复读校验 ----
+  var ck=getCookie('probe_ck');
+  var ckValid=true, ckStatus='';
+  if(!ck){
+    var cand=rnd('CK');
+    setCookie('probe_ck',cand);
+    var readback=getCookie('probe_ck');           // 复读校验：证明确实进了 cookie jar
+    if(readback===cand){ ck=cand; ckStatus='新生成并复读校验 OK'; }
+    else { ck=null; ckValid=false; ckStatus='cookie 写入复读失败（被禁用/异常 origin）——本信号作废，不得参与判定'; }
+  } else {
+    ckStatus='读到已存在 cookie 令牌（可能来自共享的浏览器会话）';
+  }
+  document.getElementById('ck').textContent=ck===null?'(无有效 cookie 令牌)':ck;
+  var cks=document.getElementById('ckstatus');
+  cks.textContent=ckStatus; cks.className='v '+(ckValid?'ok':'bad');
+
+  // ---- localStorage 令牌：与 cookie 互不 seed，独立生成 ----
+  var ls=null,first=null,lsValid=true;
+  try{
+    ls=localStorage.getItem('probe_ls');
+    if(!ls){ ls=rnd('LS'); localStorage.setItem('probe_ls',ls); }   // 独立随机，绝不回填 cookie 令牌
+    first=localStorage.getItem('probe_first');
+    if(!first){ first=new Date().toISOString(); localStorage.setItem('probe_first',first); }
+  }catch(e){ ls='(localStorage 不可用: '+e+')'; first='(n/a)'; lsValid=false; }
+  document.getElementById('ls').textContent=ls;
+  document.getElementById('first').textContent=first;
+
+  var record={
+    uaAuxiliary:{isWebView:isWebView, userAgent:ua},
+    cookieToken:ck, cookieValid:ckValid, cookieStatus:ckStatus,
+    localStorageToken:ls, localStorageValid:lsValid, firstVisit:first,
+    href:location.href, openedAt:new Date().toISOString(),
+    NOTE:'决定性证据看 dumpsys activity activities 的浏览器 CCT 包名与气泡 task，本页仅辅助/佐证'
+  };
+  var dump=JSON.stringify(record,null,2);
+  document.getElementById('dump').textContent=dump;
+  console.log('[BUBBLE_PROBE] '+JSON.stringify(record));   // 便于 adb logcat 抓取
+  document.getElementById('copy').addEventListener('click',function(){
+    try{navigator.clipboard.writeText(dump);this.textContent='已复制';}catch(e){this.textContent='复制失败，请手动截图';}
+  });
+})();
+</script>
+</body>
+</html>
