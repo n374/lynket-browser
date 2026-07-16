@@ -51,11 +51,13 @@ data class BubbleLoadData(
   val icon: Bitmap? = null,
   val color: Int = Constants.NO_COLOR,
   /**
-   * RAS-55 spike (design §5.3)：气泡展开目标是「外部浏览器 CCT 薄壳」(true, 实验组) 还是
-   * 「内置 WebView」(false, 对照组)。默认取 [BubbleSpikeConfig.DEFAULT_USE_CCT_SHELL]；
-   * `BubbleSpikeTriggerActivity` 会按 intent extra 显式传值以在同一 APK 做 A/B。
+   * RAS-55：气泡展开目标是「外部浏览器 CCT 薄壳」
+   * ([arun.com.chromer.browsing.customtabs.BubbleCctShellActivity], true) 还是
+   * 「内置 WebView」([arun.com.chromer.browsing.webview.EmbeddableWebViewActivity], false)。
+   * 默认 null = 跟随用户偏好 [arun.com.chromer.settings.RxPreferences.bubbleExternalBrowser]
+   * （由 [BubbleNotificationManager.showBubbles] 读取）；显式传非 null 值可覆盖偏好（供调试/测试）。
    */
-  val useCctShell: Boolean = BubbleSpikeConfig.DEFAULT_USE_CCT_SHELL
+  val useCctShell: Boolean? = null
 )
 
 @RequiresApi(Build.VERSION_CODES.Q)
