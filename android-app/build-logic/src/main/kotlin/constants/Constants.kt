@@ -45,8 +45,8 @@ public const val ANDROID_TARGET_SDK: Int = 35
 public const val ANDROID_PACKAGE_NAME: String = "arun.com.chromer"
 public const val ANDROID_RELEASE_VARIANT: String = "release"
 public const val ANDROID_DEBUG_VARIANT: String = "debug"
-public const val ANDROID_VERSION_CODE: Int = 57
-public const val ANDROID_VERSION_NAME: String = "2.2.0"
+public const val ANDROID_VERSION_CODE: Int = 58
+public const val ANDROID_VERSION_NAME: String = "2.2.1"
 
 public typealias ModuleVersion = Map<String, String>
 
