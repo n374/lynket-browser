@@ -29,6 +29,8 @@ import dagger.Module;
  * {@code TestAppModule(Application)} called a {@code super(application)} constructor that ceased to
  * exist when prod migrated {@code AppModule} to the {@code @Component.Factory} + {@code @BindsInstance}
  * pattern — that drift had left the whole unit-test source set uncompilable (RAS-55 fix).
+ * (Merge note: main's interim fix kept the builder style with a local {@code @Provides Application};
+ * superseded by this factory pattern to match the merged TestAppComponent/LynketTestApplication.)
  */
 @Module(includes = ViewModelModule.class)
 public class TestAppModule extends AppModule {

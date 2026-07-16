@@ -164,7 +164,9 @@ open class WebViewActivity : BrowsingActivity() {
             setLoadingProgress(newProgress)
           }
         }
-        settings.javaScriptEnabled = true
+        // Ported from master d3996723: also enable DOM storage, else window.localStorage is null
+        // and JS-async sites (e.g. jandan comments) fail with "加载失败" despite HTTP 200.
+        WebViewConfigurator.configure(settings)
         val previousUrl = savedInstanceState?.getString(EXTRA_CURRENT_LOADING_URL)
         if (previousUrl == null) {
           loadUrl(intent.dataString!!)

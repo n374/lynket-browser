@@ -35,8 +35,47 @@
     android:name="android.permission.PACKAGE_USAGE_STATS"
     tools:ignore="ProtectedPermissions" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <!--
+    Spike RAS-38: on targetSdk >= 33 (Tiramisu) notifications are blocked entirely until
+    POST_NOTIFICATIONS is granted at runtime. Without this, notify() is silently dropped
+    (dumpsys notification shows 0 records) and no bubble can ever appear. This was the
+    likely "foreground everything fails" false-negative in the RAS-15 experiments.
+  -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
   <uses-sdk tools:overrideLibrary="in.arunkumarsampath.transitionx" />
+
+  <!--
+    Spike RAS-38 regression fix: bumping targetSdk 29 -> 35 turns on Android 11 (API 30)
+    package visibility filtering. Lynket's whole job is to enumerate and delegate to other
+    browsers / Custom Tabs providers (Utils.getCustomTabPackages, CustomTabs.getCustomTab
+    SupportingPackages, SecondaryBrowserReceiver, the provider picker in Settings). Without
+    an explicit <queries> those PackageManager.queryIntentActivities / resolveService calls
+    come back empty, so Settings shows no installed browsers to choose from. Declare exactly
+    the intents Lynket probes so those apps become visible again.
+  -->
+  <queries>
+    <!-- Web browsers / any app that can open http(s) links -->
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="https" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="http" />
+    </intent>
+    <!-- Chrome/other Custom Tabs providers (probed via resolveService) -->
+    <intent>
+      <action android:name="android.support.customtabs.action.CustomTabsService" />
+    </intent>
+    <!-- Share targets used by the intent picker sheet -->
+    <intent>
+      <action android:name="android.intent.action.SEND" />
+      <data android:mimeType="text/plain" />
+    </intent>
+  </queries>
 
   <application
     android:name=".Lynket"
@@ -70,6 +109,7 @@
       android:name="arun.com.chromer.bubbles.webheads.qs.WebHeadTile"
       android:icon="@drawable/ic_bubble_chart_white_24dp"
       android:label="@string/web_heads"
+      android:exported="true"
       android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
       <intent-filter>
         <action android:name="android.service.quicksettings.action.QS_TILE" />
@@ -79,6 +119,7 @@
       android:name=".browsing.incognito.IncognitoTile"
       android:icon="@drawable/ic_chromer_notification"
       android:label="@string/incognito_mode"
+      android:exported="true"
       android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
       <intent-filter>
         <action android:name="android.service.quicksettings.action.QS_TILE" />
@@ -88,6 +129,7 @@
       android:name=".browsing.amp.qs.AmpTile"
       android:icon="@drawable/ic_action_amp_icon"
       android:label="@string/amp_mode"
+      android:exported="true"
       android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
       <intent-filter>
         <action android:name="android.service.quicksettings.action.QS_TILE" />
@@ -97,6 +139,7 @@
       android:name=".browsing.article.qs.ArticleTile"
       android:icon="@drawable/ic_description_black_24dp"
       android:label="@string/article_mode"
+      android:exported="true"
       android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
       <intent-filter>
         <action android:name="android.service.quicksettings.action.QS_TILE" />
@@ -147,6 +190,7 @@
     <activity-alias
       android:name=".activities.BrowserInterceptActivity"
       android:label="@string/app_name"
+      android:exported="true"
       android:targetActivity=".browsing.browserintercept.BrowserInterceptActivity"
       android:theme="@style/Theme.AppCompat.Translucent">
       <intent-filter>
@@ -207,6 +251,7 @@
     <activity
       android:name=".browsing.shareintercept.ShareInterceptActivity"
       android:excludeFromRecents="true"
+      android:exported="true"
       android:label="@string/share_text_processor_label">
       <intent-filter>
         <action android:name="android.intent.action.SEND" />
