@@ -53,7 +53,7 @@
 
 ### AC-8 CCT 承载不被破坏（回归）
 - **WHEN** 用户以系统 Custom Tabs 模式打开网页，**THE** 本次改动 **SHALL NOT** 改变或破坏 CCT 模式既有的跳转行为（CCT 内跳转仍由 provider 处理）。
-- 测试：代码级保证：`browsing/customtabs/` 零改动（diff 可查），改动收敛于 `browsing/webview/`；全量单测回归通过（44 tests, 0 failed）
+- 测试：代码级保证：`browsing/customtabs/` 零改动（diff 可查），改动收敛于 `browsing/webview/`；全量单测回归通过（开发阶段树 44 tests / 0 failed；合入 main 后最终树 56 tests / 0 failures / 0 errors，4 skipped）
 
 ## 需实测确认的项（模拟器 / 真机）
 
