@@ -35,6 +35,10 @@
     android:name="android.permission.PACKAGE_USAGE_STATS"
     tools:ignore="ProtectedPermissions" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <!-- Android 14 (API 34) requires a typed FGS permission. Web Heads (overlay bubbles) and
+       AppDetect (usage-stats polling) fit no standard type, so they use specialUse. This is a
+       normal permission (auto-granted). See docs/changes/54-mode-crash-fix/design.md §12. -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
   <!--
     Spike RAS-38: on targetSdk >= 33 (Tiramisu) notifications are blocked entirely until
     POST_NOTIFICATIONS is granted at runtime. Without this, notify() is silently dropped
@@ -91,7 +95,17 @@
     <service
       android:name=".appdetect.AppDetectService"
       android:enabled="true"
-      android:exported="false" />
+      android:exported="false"
+      android:foregroundServiceType="@integer/foreground_service_type_special_use"
+      tools:targetApi="34"
+      tools:ignore="UnusedAttribute">
+      <!-- FOREGROUND_SERVICE_TYPE_SPECIAL_USE via @integer (=0x40000000). compileSdk=31's attrs.xml
+           rejects both "specialUse" and a raw numeric literal, so a resource reference is used to
+           bypass AAPT2's flag-enum validation; <34 devices mask the unknown bit off. design.md §12.4. -->
+      <property
+        android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+        android:value="Detects the current foreground app to drive per-app browsing-mode settings" />
+    </service>
     <service
       android:name=".browsing.customtabs.dynamictoolbar.AppColorExtractorJob"
       android:exported="false"
@@ -99,7 +113,16 @@
     <service
       android:name="arun.com.chromer.bubbles.webheads.WebHeadService"
       android:enabled="true"
-      android:exported="false" />
+      android:exported="false"
+      android:foregroundServiceType="@integer/foreground_service_type_special_use"
+      tools:targetApi="34"
+      tools:ignore="UnusedAttribute">
+      <!-- FOREGROUND_SERVICE_TYPE_SPECIAL_USE via @integer (=0x40000000); resource reference
+           bypasses AAPT2's flag-enum validation under compileSdk=31. See design.md §12.4. -->
+      <property
+        android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+        android:value="Floating overlay web bubbles (SYSTEM_ALERT_WINDOW) to keep tabs accessible" />
+    </service>
     <service
       android:name=".browsing.customtabs.KeepAliveService"
       android:enabled="true"
@@ -217,6 +240,19 @@
       android:name=".browsing.customtabs.CustomTabActivity"
       android:label="@string/app_name"
       android:theme="@style/Theme.AppCompat.Translucent" />
+    <!-- RAS-55: bubble-embeddable shell that launches the selected external browser's Custom Tab
+         (reusing its logins) when the "open bubbles in external browser" preference is on. Mirrors
+         EmbeddableWebViewActivity's embedding declarations (allowEmbedded/resizeable/documentLaunchMode)
+         so the system bubble can host it; not exported. -->
+    <activity
+      android:name=".browsing.customtabs.BubbleCctShellActivity"
+      android:allowEmbedded="true"
+      android:documentLaunchMode="always"
+      android:exported="false"
+      android:label="@string/app_name"
+      android:resizeableActivity="true"
+      android:theme="@style/Theme.AppCompat.Translucent"
+      tools:targetApi="Q" />
     <activity
       android:name=".browsing.webview.WebViewActivity"
       android:theme="@style/AppTheme.NoActionBar" />

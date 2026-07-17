@@ -28,6 +28,26 @@ jobs:
           distribution: temurin
           java-version: '11'
 
+      # RAS-54 追加：runner 是一次性的，AGP 找不到 ~/.android/debug.keystore 时会现生成
+      # 随机密钥，导致每次 CI 出的 APK 签名都不同，设备上覆盖安装报
+      # INSTALL_FAILED_UPDATE_INCOMPATIBLE。这里从 secret 恢复固定的 debug keystore
+      # （与本地开发机同一把，标准 AGP debug 参数：alias androiddebugkey / storepass android），
+      # 使 CI 包与本地包签名一致、版本间可直接覆盖升级。
+      # secret 缺失时 fail loud，绝不静默退回随机签名。
+      - name: Restore stable debug keystore
+        env:
+          DEBUG_KEYSTORE_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DEBUG_KEYSTORE_B64:-}" ]; then
+            echo "::error::DEBUG_KEYSTORE_B64 secret missing — refusing to sign with an ephemeral debug key (breaks update-install, see RAS-54)."
+            exit 1
+          fi
+          mkdir -p ~/.android
+          printf '%s' "$DEBUG_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+          keytool -list -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android >/dev/null \
+            || { echo "::error::Restored keystore is invalid (alias/storepass mismatch)"; exit 1; }
+
       - name: Cache Gradle & Maven Local
         uses: actions/cache@v4
         with:
