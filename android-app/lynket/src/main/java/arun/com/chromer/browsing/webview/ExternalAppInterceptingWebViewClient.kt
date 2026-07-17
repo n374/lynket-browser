@@ -20,7 +20,6 @@
 
 package arun.com.chromer.browsing.webview
 
-import android.graphics.Bitmap
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -45,10 +44,4 @@ open class ExternalAppInterceptingWebViewClient(
 
   override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean =
     externalAppLaunchHandler.shouldOverrideUrlLoading(request?.url?.toString())
-
-  override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-    super.onPageStarted(view, url, favicon)
-    // Main-frame page start defines the "page" for dialog dedup (design §4).
-    externalAppLaunchHandler.onPageStarted()
-  }
 }

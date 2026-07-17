@@ -53,16 +53,14 @@ open class ExternalAppLaunchHandler(
   /**
    * Allow-keys whose confirmation dialog is currently showing — suppresses dialog
    * bombardment from redirect chains while a prompt is pending (design §4, revised after
-   * dev-phase cross review). Keys are removed on dialog dismiss so a deliberate re-click
-   * after cancel prompts again — a for-the-page-lifetime dedup would silently swallow
-   * later legitimate clicks (AC-3/AC-5 violation). Reset on every main-frame page start.
+   * dev-phase cross review). Lifecycle is owned EXCLUSIVELY by the dialog: add before
+   * show, remove on dismiss (any reason), roll back if the activity dies before show.
+   * Deliberately NOT cleared on page navigation — a page-start clear while a dialog is
+   * still up would let the same key stack a second dialog. A for-the-page-lifetime dedup
+   * was also rejected: it silently swallowed deliberate re-clicks after cancel
+   * (AC-3/AC-5 violation).
    */
   private val pendingPromptKeys = HashSet<String>()
-
-  /** Call from `WebViewClient.onPageStarted` (main-frame loads only) to reset dedup state. */
-  fun onPageStarted() {
-    pendingPromptKeys.clear()
-  }
 
   /**
    * Single entry point for both `shouldOverrideUrlLoading` overloads.

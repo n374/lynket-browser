@@ -66,7 +66,7 @@ flowchart TD
 - `MaterialDialog.Builder`（0.9.6.0，`build.gradle:127`；用法样板 `Changelog.java:85-92`）：标题 + 正文（弱化措辞见上）+「跳转」「取消」+ 记住选择勾选。
 - 勾选项实现**优先 `customView` 内放 `CheckBox`**（仓库已有 customView 模式，0.9.x `checkBoxPrompt` API 存在性留待开发阶段编译验证，属低风险待办）。
 - 生命周期保护：弹框前检查 `isFinishing || isDestroyed`，防 WindowLeaked。
-- 防轰炸（开发阶段交叉评审修订）：Handler 持内存级"**弹框 pending 中**放行键"集合——同 key 弹框显示期间的重复触发（重定向链轰炸）不再弹框；**弹框关闭（确认/取消/点外部）即移除 key**，用户此后的主动点击会重新弹框。原"同页去重到页面生命周期"方案会把取消后的合法点击静默吞掉（无弹框/无启动/无提示，违反 AC-3/AC-5 的 fail-loud 语义），已废弃。`onPageStarted`（仅主 frame 加载触发）时清空兜底。
+- 防轰炸（开发阶段交叉评审修订，2 回合）：Handler 持内存级"**弹框 pending 中**放行键"集合——同 key 弹框显示期间的重复触发（重定向链轰炸）不再弹框；集合生命周期**只由弹框自身维护**：show 前 add、dismiss（确认/取消/点外部）时 remove、show 前 Activity 已 finishing 则回滚 add。**不在 `onPageStarted` 清空**（回合 2 修正：弹框未关时页面导航再清空会让同 key 叠出第二个弹框）。原"同页生命周期去重"方案会把取消后的合法点击静默吞掉（违反 AC-3/AC-5 的 fail-loud 语义），已废弃。
 - 「记住选择」**只记"允许"，不记"拒绝"**——防用户误勾后某类链接被长期静默禁用。
 
 ### 5. 记住选择存储（Store）
@@ -116,4 +116,4 @@ flowchart TD
 ## 变更历史
 
 - 2026-07-17 技术方案官：产出 design（含 Codex 对抗评审 2 回合共识），同步修正 spec「可唤起」定义与放行键粒度，转开发阶段。
-- 2026-07-17 开发官：开发阶段交叉验收（Codex）修订两点——① 去重语义从"同页生命周期"改为"弹框 pending 期间"（原方案会静默吞掉取消后的合法点击，AC-3/AC-5 违例，高severity 采纳）；② WebView 内部 scheme 白名单补 `content:`（维持现状行为，中 severity 采纳）。
+- 2026-07-17 开发官：开发阶段交叉验收（Codex，2 回合）修订三点——① 去重语义从"同页生命周期"改为"弹框 pending 期间"（原方案会静默吞掉取消后的合法点击，AC-3/AC-5 违例，高 severity 采纳）；② WebView 内部 scheme 白名单补 `content:`（维持现状行为，中 severity 采纳）；③ 回合 2：pending 集合不在 `onPageStarted` 清空，生命周期完全由弹框 add/dismiss/回滚维护（防弹框叠层，中高 severity 采纳）。

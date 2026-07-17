@@ -85,10 +85,9 @@ class ExternalAppInterceptingWebViewClientTest {
     cases.forEach { (url, expected) ->
       @Suppress("DEPRECATION")
       val stringResult = client.shouldOverrideUrlLoading(null, url)
-      // Reset page state so the dedup set can't couple the two invocations.
-      client.onPageStarted(null, "https://example.com", null)
+      // The second call may hit the pending-prompt dedup — that only suppresses the
+      // dialog, never changes the intercept decision, which is what this test locks.
       val requestResult = client.shouldOverrideUrlLoading(null, request(url))
-      client.onPageStarted(null, "https://example.com", null)
 
       assertEquals("String overload wrong for $url", expected, stringResult)
       assertEquals("overloads diverge for $url", stringResult, requestResult)

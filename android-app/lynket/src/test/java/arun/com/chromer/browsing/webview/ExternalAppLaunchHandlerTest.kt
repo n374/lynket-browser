@@ -113,9 +113,14 @@ class ExternalAppLaunchHandlerTest {
     handler.shouldOverrideUrlLoading("weixin://dl/b")
     assertEquals("redirect bombardment must not stack dialogs", 1, handler.dialogsShown.size)
 
-    handler.onPageStarted()
+    // Even a page navigation must NOT re-arm the key while the dialog is still up —
+    // only dismiss does (round-2 cross-review fix: no onPageStarted clear).
     handler.shouldOverrideUrlLoading("weixin://dl/c")
-    assertEquals("new page load must prompt again", 2, handler.dialogsShown.size)
+    assertEquals(1, handler.dialogsShown.size)
+
+    handler.onPromptDismissed(handler.dialogsShown.single())
+    handler.shouldOverrideUrlLoading("weixin://dl/c")
+    assertEquals("after dismiss the same key must prompt again", 2, handler.dialogsShown.size)
   }
 
   @Test
