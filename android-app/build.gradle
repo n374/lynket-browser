@@ -24,9 +24,13 @@ plugins {
 allprojects {
   configurations {
     all {
-      resolutionStrategy {
-        force "org.ow2.asm:asm:7.0"
-        // cacheChangingModulesFor 0, "seconds"
+      // JaCoCo ships with (and needs) asm 9.x — the global asm 7.0 force below makes
+      // its analyzer throw IllegalArgumentException on every class.
+      if (!name.startsWith("jacoco")) {
+        resolutionStrategy {
+          force "org.ow2.asm:asm:7.0"
+          // cacheChangingModulesFor 0, "seconds"
+        }
       }
     }
   }

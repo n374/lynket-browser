@@ -180,3 +180,44 @@ dependencies {
   // Disk LRU cache
   implementation project(":disk-cache")
 }
+
+// JaCoCo for JVM unit tests (Robolectric) — added for RAS-58 diff-coverage reporting.
+// Run: ./gradlew :lynket:testDebugUnitTest :lynket:jacocoDebugUnitTestReport
+apply plugin: "jacoco"
+
+jacoco {
+  toolVersion = "0.8.12"
+}
+
+tasks.withType(Test).configureEach {
+  jacoco {
+    // Robolectric loads classes in custom loaders; without this exclusion jacoco's
+    // on-the-fly instrumentation double-instruments and reports zero coverage.
+    includeNoLocationClasses = true
+    excludes = ["jdk.internal.*"]
+  }
+}
+
+task jacocoDebugUnitTestReport(type: JacocoReport) {
+  group = "verification"
+  description = "Coverage report for testDebugUnitTest."
+  reports {
+    xml.required = true
+    html.required = true
+  }
+  def fileFilter = [
+    "**/R.class", "**/R\$*.class", "**/BuildConfig.*", "**/Manifest*.*",
+    "**/*_MembersInjector.class", "**/Dagger*", "**/*Module_*", "**/*Factory*",
+    "**/*_Impl*", "**/*\$\$*"
+  ]
+  // Scoped to the RAS-58 diff classes: several unrelated legacy classes crash
+  // JaCoCo's ASM analyzer, and diff coverage is what the gate needs anyway.
+  classDirectories.setFrom(files(
+    fileTree(dir: "${buildDir}/tmp/kotlin-classes/debug",
+      includes: ["**/browsing/webview/ExternalApp*.class"], excludes: fileFilter),
+    fileTree(dir: "${buildDir}/intermediates/javac/debug/classes",
+      includes: ["**/settings/Preferences.class", "**/settings/Preferences\$*.class"], excludes: fileFilter)
+  ))
+  sourceDirectories.setFrom(files("src/main/java"))
+  executionData.setFrom(fileTree(dir: buildDir, includes: ["jacoco/testDebugUnitTest.exec"]))
+}
