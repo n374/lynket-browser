@@ -51,14 +51,17 @@ open class ExternalAppLaunchHandler(
   private val activityStarter: (Intent) -> Unit = { activity.startActivity(it) }
 ) {
   /**
-   * Allow-keys already prompted for during the current page load — suppresses dialog
-   * bombardment from redirect chains (design §4). Reset on every main-frame page start.
+   * Allow-keys whose confirmation dialog is currently showing — suppresses dialog
+   * bombardment from redirect chains while a prompt is pending (design §4, revised after
+   * dev-phase cross review). Keys are removed on dialog dismiss so a deliberate re-click
+   * after cancel prompts again — a for-the-page-lifetime dedup would silently swallow
+   * later legitimate clicks (AC-3/AC-5 violation). Reset on every main-frame page start.
    */
-  private val promptedKeysThisPage = HashSet<String>()
+  private val pendingPromptKeys = HashSet<String>()
 
   /** Call from `WebViewClient.onPageStarted` (main-frame loads only) to reset dedup state. */
   fun onPageStarted() {
-    promptedKeysThisPage.clear()
+    pendingPromptKeys.clear()
   }
 
   /**
@@ -89,15 +92,24 @@ open class ExternalAppLaunchHandler(
       launchExternalApp(link.intent)
       return
     }
-    if (!promptedKeysThisPage.add(link.allowKey)) {
-      // Already prompted for this key during this page load — don't re-prompt (design §4).
+    if (!pendingPromptKeys.add(link.allowKey)) {
+      // A prompt for this key is already showing — swallow redirect-chain re-triggers.
       return
     }
     if (activity.isFinishing || activity.isDestroyed) {
       // Too late to show a dialog — avoid WindowLeaked.
+      pendingPromptKeys.remove(link.allowKey)
       return
     }
     showConfirmationDialog(link)
+  }
+
+  /**
+   * MUST be called when the confirmation dialog goes away for any reason (confirm, cancel,
+   * outside touch) — re-enables prompting for this key so a deliberate later click works.
+   */
+  internal fun onPromptDismissed(link: ExternalAppLink) {
+    pendingPromptKeys.remove(link.allowKey)
   }
 
   /** Open for tests to observe/short-circuit the dialog without touching real windows. */
@@ -113,8 +125,9 @@ open class ExternalAppLaunchHandler(
       .positiveText(R.string.external_app_launch_open)
       .negativeText(android.R.string.cancel)
       .onPositive { _, _ -> onLaunchConfirmed(link, rememberCheckBox.isChecked) }
+      .dismissListener { onPromptDismissed(link) }
       .show()
-    // Cancel / dismiss: do nothing — user stays on the current page (AC-5).
+    // Cancel: no launch — user stays on the current page (AC-5); dismiss re-arms the prompt.
   }
 
   /** Positive-button path: optionally persist the choice, then launch (AC-4/AC-6). */

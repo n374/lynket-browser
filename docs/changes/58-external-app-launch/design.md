@@ -41,7 +41,7 @@ flowchart TD
 
 - 同时 override **deprecated String 版**与 **`WebResourceRequest` 版**（API 24+），委托同一处理函数——minSdk 23 必须保留 String 版，不依赖框架默认转发。
 - **不做 `isForMainFrame` 短路**（评审回合裁决）：官方语义下非 http(s) 的 subframe 导航同样回调本方法，H5 收银台等真实场景在 iframe 内发起 scheme 跳转；且 String 版无 frame 信息，短路会造成 API 23 与 24+ 行为分叉（跨路径差分缺陷）。滥扰风险由「同页去重 + 记住选择」兜底。
-- 分类规则：`http`/`https` → `return false`（AC-2）；`about:`/`data:`/`blob:`/`file:`/`javascript:` 等 WebView 内部 scheme → `return false` 维持现状；**其余一律 `return true`**（AC-1，即使解析失败也不得回给 WebView 加载）。
+- 分类规则：`http`/`https` → `return false`（AC-2）；`about:`/`data:`/`blob:`/`file:`/`javascript:`/`content:` 等 WebView 内部 scheme → `return false` 维持现状（`content:` 为开发阶段交叉评审补充——WebView 原生可加载 content URI，Chromium 亦不将其外部化）；**其余一律 `return true`**（AC-1，即使解析失败也不得回给 WebView 加载）。
 - `EmbeddableWebViewActivity` 是空子类（`EmbeddableWebViewActivity.kt:26`），改父类即同时覆盖气泡承载面；`ArticleActivity` 用 RecyclerView 渲染不涉 WebView，不接入（`ArticleActivity.kt:319`）。
 
 ### 2. Intent 解析与安全加固（Resolver）
@@ -66,7 +66,7 @@ flowchart TD
 - `MaterialDialog.Builder`（0.9.6.0，`build.gradle:127`；用法样板 `Changelog.java:85-92`）：标题 + 正文（弱化措辞见上）+「跳转」「取消」+ 记住选择勾选。
 - 勾选项实现**优先 `customView` 内放 `CheckBox`**（仓库已有 customView 模式，0.9.x `checkBoxPrompt` API 存在性留待开发阶段编译验证，属低风险待办）。
 - 生命周期保护：弹框前检查 `isFinishing || isDestroyed`，防 WindowLeaked。
-- 防轰炸：Handler 持内存级"本页已处理放行键"集合，`onPageStarted`（仅主 frame 加载触发，天然定义页面周期）时重置；同页同放行键重复触发不再弹框。
+- 防轰炸（开发阶段交叉评审修订）：Handler 持内存级"**弹框 pending 中**放行键"集合——同 key 弹框显示期间的重复触发（重定向链轰炸）不再弹框；**弹框关闭（确认/取消/点外部）即移除 key**，用户此后的主动点击会重新弹框。原"同页去重到页面生命周期"方案会把取消后的合法点击静默吞掉（无弹框/无启动/无提示，违反 AC-3/AC-5 的 fail-loud 语义），已废弃。`onPageStarted`（仅主 frame 加载触发）时清空兜底。
 - 「记住选择」**只记"允许"，不记"拒绝"**——防用户误勾后某类链接被长期静默禁用。
 
 ### 5. 记住选择存储（Store）
@@ -116,3 +116,4 @@ flowchart TD
 ## 变更历史
 
 - 2026-07-17 技术方案官：产出 design（含 Codex 对抗评审 2 回合共识），同步修正 spec「可唤起」定义与放行键粒度，转开发阶段。
+- 2026-07-17 开发官：开发阶段交叉验收（Codex）修订两点——① 去重语义从"同页生命周期"改为"弹框 pending 期间"（原方案会静默吞掉取消后的合法点击，AC-3/AC-5 违例，高severity 采纳）；② WebView 内部 scheme 白名单补 `content:`（维持现状行为，中 severity 采纳）。

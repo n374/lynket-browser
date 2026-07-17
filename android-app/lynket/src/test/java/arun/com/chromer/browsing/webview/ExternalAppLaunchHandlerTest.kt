@@ -107,15 +107,31 @@ class ExternalAppLaunchHandlerTest {
   }
 
   @Test
-  fun `same allow key prompts only once per page, reset on page start (design §4)`() {
+  fun `same allow key does not re-prompt while a prompt is pending (design §4)`() {
     val handler = RecordingHandler()
     handler.shouldOverrideUrlLoading("weixin://dl/a")
     handler.shouldOverrideUrlLoading("weixin://dl/b")
-    assertEquals("redirect bombardment must not re-prompt", 1, handler.dialogsShown.size)
+    assertEquals("redirect bombardment must not stack dialogs", 1, handler.dialogsShown.size)
 
     handler.onPageStarted()
     handler.shouldOverrideUrlLoading("weixin://dl/c")
     assertEquals("new page load must prompt again", 2, handler.dialogsShown.size)
+  }
+
+  @Test
+  fun `deliberate re-click after cancel prompts again (AC-3 AC-5, cross-review fix)`() {
+    val handler = RecordingHandler()
+    handler.shouldOverrideUrlLoading("weixin://dl/a")
+    val link = handler.dialogsShown.single()
+
+    // User cancels (dialog dismissed without confirmation)…
+    handler.onPromptDismissed(link)
+    // …then deliberately clicks the same link again: it MUST prompt again, never be
+    // silently swallowed.
+    handler.shouldOverrideUrlLoading("weixin://dl/a")
+
+    assertEquals(2, handler.dialogsShown.size)
+    assertTrue(launched.isEmpty())
   }
 
   @Test

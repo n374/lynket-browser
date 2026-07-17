@@ -54,7 +54,8 @@ class ExternalAppLinkResolverTest {
       "data:text/html,<p>hi</p>",
       "blob:https://example.com/uuid",
       "file:///sdcard/x.html",
-      "javascript:void(0)"
+      "javascript:void(0)",
+      "content://media/external/images/1"
     ).forEach { url ->
       assertTrue(
         "$url must pass through to the WebView",

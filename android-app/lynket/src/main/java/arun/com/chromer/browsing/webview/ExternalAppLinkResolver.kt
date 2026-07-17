@@ -127,10 +127,12 @@ class ExternalAppLinkResolver {
   companion object {
     /**
      * Schemes the WebView handles itself — pass through unchanged (AC-2 + design §1).
-     * Everything else is treated as an external-app link.
+     * Everything else is treated as an external-app link. content:// is included: WebView
+     * loads it natively (allowContentAccess), and Chromium's ExternalNavigationHandler
+     * never externalizes it either.
      */
     private val WEB_VIEW_SCHEMES = setOf(
-      "http", "https", "about", "data", "blob", "file", "javascript"
+      "http", "https", "about", "data", "blob", "file", "javascript", "content"
     )
   }
 }
