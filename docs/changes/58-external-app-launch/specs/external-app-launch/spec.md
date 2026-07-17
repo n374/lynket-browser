@@ -23,37 +23,37 @@
 ### AC-1 检测并拦截 App 跳转链接
 - **WHEN** LB 自有 WebView 承载的页面发起一次页面内导航，**AND** 该导航目标是 App 跳转链接（非 http(s) scheme 或 `intent://`），**THE** WebView 层 **SHALL** 在 `shouldOverrideUrlLoading` 中拦截该导航（返回"已接管"），**AND SHALL NOT** 把该链接继续当普通 URL 交给 WebView 加载。
 - 反例（现状缺陷，必须消除）：非 http(s) 链接被 WebView 直接加载导致"打不开也不跳转"。
-- `TBD(WebView shouldOverrideUrlLoading 单测：intent:// / 自定义 scheme 命中拦截；http(s) 不拦截)`
+- 测试：`android-app/lynket/src/test/java/arun/com/chromer/browsing/webview/ExternalAppLinkResolverTest.kt`（分类拦截）、`android-app/lynket/src/test/java/arun/com/chromer/browsing/webview/ExternalAppInterceptingWebViewClientTest.kt`（两个 overload 行为一致，含 parse 失败仍拦截）
 
 ### AC-2 http(s) 链接行为不变
 - **WHEN** 导航目标是 `http`/`https` 链接，**THE** 系统 **SHALL** 保持现状行为（正常在 WebView 内加载），**SHALL NOT** 弹确认框。
-- `TBD(WebView shouldOverrideUrlLoading 单测：http(s) 透传不拦截)`
+- 测试：`android-app/lynket/src/test/java/arun/com/chromer/browsing/webview/ExternalAppLinkResolverTest.kt`（`http, https and webview internal schemes pass through`）、`android-app/lynket/src/test/java/arun/com/chromer/browsing/webview/ExternalAppLaunchHandlerTest.kt`（`http url is not intercepted`）
 
 ### AC-3 默认弹确认框
 - **WHEN** 拦截到一个解析成功（`Intent.parseUri` 未失败）的 App 跳转链接，**AND** 该放行键**未**被"记住选择"放行，**THE** 系统 **SHALL** 弹出确认框，**AND** 确认框 **SHALL** 尽可能展示将要跳转的目标（best-effort 取 App 名，取不到时展示 scheme / 包名，措辞不承诺精确目标），**AND SHALL** 提供「确认跳转」「取消」两个动作，**AND SHALL** 提供「记住选择 / 不再询问」勾选项。
 - 说明（2026-07-17 技术方案阶段修正）：确认框**不以** `PackageManager` 预解析结果做门控——解析不到组件的链接同样弹框（包可见性下解析结果不可靠），"未安装"由 AC-7 的启动路径兜住。
-- `TBD(UI/交互测试：可唤起跳转链接触发确认框且含记住选择项)`
+- 测试：`android-app/lynket/src/test/java/arun/com/chromer/browsing/webview/ExternalAppLaunchHandlerTest.kt`（`unremembered external link shows dialog...`；解析不到组件同样弹框由 ExternalAppLinkResolverTest `unresolvable link still resolves as external...` 锁定）；记住选择勾选项 UI 见 `android-app/lynket/src/main/res/layout/dialog_external_app_launch.xml`（模拟器实测见下方实测项）
 
 ### AC-4 确认后跳转
 - **WHEN** 用户在确认框点「确认跳转」，**THE** 系统 **SHALL** 以 `startActivity` 唤起目标 App 对应的 `Intent`。
-- `TBD(仪器测试/手测：确认后正确唤起已安装目标 App)`
+- 测试：`android-app/lynket/src/test/java/arun/com/chromer/browsing/webview/ExternalAppLaunchHandlerTest.kt`（`confirming with remember persists choice and launches`）+ 模拟器实测（见下方实测项）
 
 ### AC-5 取消不跳转
 - **WHEN** 用户点「取消」，**THE** 系统 **SHALL NOT** 跳转，**AND SHALL** 让用户停留在当前页面，不影响后续浏览。
-- `TBD(交互测试：取消后无跳转、页面可继续浏览)`
+- 测试：`android-app/lynket/src/test/java/arun/com/chromer/browsing/webview/ExternalAppLaunchHandlerTest.kt`（`unremembered external link shows dialog and does not launch`——未确认即不启动）
 
 ### AC-6 记住选择后免打扰
 - **WHEN** 用户在确认框勾选「记住选择」并确认，**THEN** 对**同一放行键**的后续 App 跳转，**THE** 系统 **SHALL** 直接放行跳转、**SHALL NOT** 再弹确认框。
-- `TBD(存储/交互测试：勾选后同类跳转不再弹框直接跳)`
+- 测试：`android-app/lynket/src/test/java/arun/com/chromer/browsing/webview/ExternalAppLaunchHandlerTest.kt`（`remembered allow key launches directly without dialog`）、`android-app/lynket/src/test/java/arun/com/chromer/settings/PreferencesExternalAppLaunchTest.kt`（存储含 copy-on-write 回归护栏）
 
 ### AC-7 目标 App 未安装：fail loud 不崩溃（正确性红线）
 - **WHEN** 用户确认跳转但目标 App **未安装**（`startActivity` 抛 `ActivityNotFoundException` 或 `PackageManager` 解析不到组件），**THE** 系统 **MUST** 捕获异常、给出明确的"未安装 / 无法打开"提示，**AND MUST NOT** 崩溃，**AND MUST NOT** 静默吞掉（无任何反馈）。
 - 说明：本期**不要求**实现显式 Market 兜底（用户取舍），但**未安装绝不能崩溃或静默**——此条为正确性底线，不因概率低降级。
-- `TBD(单测/仪器测试：注入未安装场景，断言不崩溃且有明确提示)`
+- 测试：`android-app/lynket/src/test/java/arun/com/chromer/browsing/webview/ExternalAppLaunchHandlerTest.kt`（`ActivityNotFoundException fails loud...` 与 `SecurityException fails loud...`，异常路径必测）
 
 ### AC-8 CCT 承载不被破坏（回归）
 - **WHEN** 用户以系统 Custom Tabs 模式打开网页，**THE** 本次改动 **SHALL NOT** 改变或破坏 CCT 模式既有的跳转行为（CCT 内跳转仍由 provider 处理）。
-- `TBD(回归验证：CCT 模式打开含 App 跳转的页面，行为与改动前一致)`
+- 测试：代码级保证：`browsing/customtabs/` 零改动（diff 可查），改动收敛于 `browsing/webview/`；全量单测回归通过（44 tests, 0 failed）
 
 ## 需实测确认的项（模拟器 / 真机）
 

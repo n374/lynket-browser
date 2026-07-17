@@ -31,7 +31,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.webkit.WebChromeClient
 import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import arun.com.chromer.R
@@ -42,6 +41,7 @@ import arun.com.chromer.data.website.model.Website
 import arun.com.chromer.di.activity.ActivityComponent
 import arun.com.chromer.extenstions.applyColor
 import arun.com.chromer.extenstions.setAutoHideProgress
+import arun.com.chromer.settings.Preferences
 import arun.com.chromer.shared.Constants
 import arun.com.chromer.util.ColorUtil
 import arun.com.chromer.util.Utils
@@ -57,6 +57,12 @@ open class WebViewActivity : BrowsingActivity() {
   private var themeColor = 0
   private var fgColorStateList: ColorStateList = ColorStateList.valueOf(0)
   private var foregroundColor = 0
+
+  // RAS-58: intercepts external-app links (non http(s) schemes / intent://) with a
+  // confirmation dialog. Also covers EmbeddableWebViewActivity (bubbles) via inheritance.
+  private val externalAppLaunchHandler by lazy {
+    ExternalAppLaunchHandler(this, Preferences.get(this))
+  }
 
   override fun inject(activityComponent: ActivityComponent) = activityComponent.inject(this)
 
@@ -139,7 +145,7 @@ open class WebViewActivity : BrowsingActivity() {
   private fun setupWebView(savedInstanceState: Bundle?) {
     try {
       webView.apply {
-        webViewClient = object : WebViewClient() {
+        webViewClient = object : ExternalAppInterceptingWebViewClient(externalAppLaunchHandler) {
           override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
             super.onPageStarted(view, url, favicon)
             url?.let {

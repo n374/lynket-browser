@@ -264,6 +264,13 @@
   <string name="contribute_to_chromer">Love to code? Fork Lynket and contribute.</string>
   <string name="fork_on_github">Fork on GitHub</string>
   <string name="web_view_not_found">Web View disabled on device. Could not open link.</string>
+  <!-- External app launch confirmation (RAS-58). Label is best-effort — wording must not promise the exact target app. -->
+  <string name="external_app_launch_title">Open another app?</string>
+  <string name="external_app_launch_message">This page wants to open an external app: %1$s</string>
+  <string name="external_app_launch_open">Open</string>
+  <string name="external_app_launch_remember">Remember my choice</string>
+  <string name="external_app_not_found">No app found to open this link</string>
+  <string name="external_app_link_unparsable">Cannot open this link</string>
   <string name="app_detection_notification_channel_description">Notification will be posted when Lynket\'s app detection service is running.</string>
   <string name="app_detection_service_explanation">Monitoring foreground apps for dynamic toolbar color and per app settings.</string>
   <string name="app_detection_service">App detection service</string>
