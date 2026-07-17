@@ -60,9 +60,9 @@
 > 用户已同意"未安装兜底后续在模拟器验证"。以下项在开发/验收阶段实测并留证：
 
 1. **未安装时系统默认行为**：目标 App 未装时，`intent://`（带 `package` / 带 `browser_fallback_url`）与纯自定义 scheme 各自的实际表现——系统是否会自动跳 Market / 打开 fallback 网页，还是直接 `ActivityNotFoundException`。据实测决定是否需要补显式兜底（`browser_fallback_url` / `market://` 构造）。
-   - `TBD(模拟器实测记录：各 scheme 未安装表现 + 截图/日志)`
+   - ✅ 已实测（2026-07-17，模拟器 Android 16 / google_apis arm64，无 Play Store）：**系统不会自动跳 Market**。`weixin://`（纯 scheme）、`market://`、`intent://`（带 package）在目标未安装时均直接 `ActivityNotFoundException`，被本实现 catch → Toast「No app found to open this link」，App 不崩溃、页面留存（logcat 证据：`ExternalAppLaunchHandler: Failed to launch external app` + `NotificationService` Toast 记录）。用户"未安装会默认跳 Market"的假设在无 Play 设备上不成立 → 建议后续小迭代补 `browser_fallback_url` / `market://` 兜底（catch 已收敛单点，见 design §6）。已安装场景（`mailto:` → Gmail）确认后正确唤起、勾选记住后免打扰直跳（`START ComposeActivityGmailExternal` 日志证据）。
 2. **承载面覆盖**：主浏览 WebView 之外，气泡 Web Heads / 文章模式等 LB 自有 WebView 承载面是否都命中同一拦截逻辑。
-   - `TBD(逐承载面手测：确认拦截+确认框一致生效)`
+   - 主浏览 WebView：✅ 已实测（拦截、确认框、取消停留、同页去重、记住直跳全链路，见上）。气泡 Web Heads（`EmbeddableWebViewActivity`）：空子类继承同一 `WebViewClient` 实现（代码级保证），需 overlay 权限的手测留验收阶段。CCT 回归：`browsing/customtabs/` 零改动；实测发现 CCT 在改动前即存在 targetSdk 31+ PendingIntent 崩溃（`CustomTabs.java:466` 缺 FLAG_IMMUTABLE，与本次无关，建议另立 issue）。
 
 ## 明确的边界语义
 
