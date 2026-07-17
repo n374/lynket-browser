@@ -32,7 +32,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -91,6 +94,7 @@ public class Preferences {
   private static final String FIRST_RUN = "firstrun_3";
   private static final String SECONDARY_PREF = "secondary_preference";
   private static final String FAV_SHARE_PREF = "fav_share_preference";
+  private static final String EXTERNAL_APP_LAUNCH_ALLOWED_KEYS = "external_app_launch_allowed_keys";
   // Singleton instance
   private static Preferences INSTANCE;
 
@@ -435,5 +439,31 @@ public class Preferences {
 
   public boolean isAppBasedToolbar() {
     return dynamicToolbarOnApp() && dynamicToolbar();
+  }
+
+  /**
+   * External app launch "remember my choice" allowlist (RAS-58). Keys are
+   * {@code package:<pkg>} or {@code scheme:<scheme>} — computed by
+   * {@code ExternalAppLinkResolver}. Only "allow" is ever stored (denials are never
+   * remembered), see docs/changes/58-external-app-launch/design.md §5.
+   */
+  public boolean isExternalAppLaunchAllowed(@NonNull final String allowKey) {
+    return getDefaultSharedPreferences()
+      .getStringSet(EXTERNAL_APP_LAUNCH_ALLOWED_KEYS, Collections.<String>emptySet())
+      .contains(allowKey);
+  }
+
+  public void rememberExternalAppLaunch(@NonNull final String allowKey) {
+    final SharedPreferences preferences = getDefaultSharedPreferences();
+    // Copy-on-write: the Set returned by getStringSet must never be mutated in place,
+    // otherwise SharedPreferences' cached instance silently swallows the update.
+    final Set<String> updated = new HashSet<>(
+      preferences.getStringSet(EXTERNAL_APP_LAUNCH_ALLOWED_KEYS, Collections.<String>emptySet()));
+    updated.add(allowKey);
+    preferences.edit().putStringSet(EXTERNAL_APP_LAUNCH_ALLOWED_KEYS, updated).apply();
+  }
+
+  public void clearExternalAppLaunchChoices() {
+    getDefaultSharedPreferences().edit().remove(EXTERNAL_APP_LAUNCH_ALLOWED_KEYS).apply();
   }
 }
